@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Potwierdzenie Rezerwacji</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; background-color: #f4f4f9; text-align: center; }
+        .box { max-width: 600px; margin: 0 auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .success-title { color: #28a745; }
+        .details { text-align: left; margin-top: 20px; line-height: 1.6; }
+    </style>
+</head>
+<body>
+
+<div class="box">
+    <h1 class="success-title">Rezerwacja Złożona Pomyślnie!</h1>
+    <p>Dziękujemy za dokonanie rezerwacji.</p>
+
+    <div class="details">
+        <p><strong>Numer rezerwacji (ID):</strong> <span th:text="${reservation.id}">1</span></p>
+        <p><strong>E-mail:</strong> <span th:text="${reservation.customerEmail}">email</span></p>
+        <p><strong>Film:</strong> <span th:text="${reservation.screening.movie.title}">tytul</span></p>
+        <p><strong>Data seansu:</strong> <span th:text="${#temporals.format(reservation.screening.startTime, 'yyyy-MM-dd HH:mm')}">Data</span></p>
+        <p><strong>Łączna kwota do zapłaty:</strong> <span th:text="${reservation.totalPrice}">0.00</span> PLN</p>
+
+        <h3>Zarezerwowane bilety:</h3>
+        <ul>
+            <li th:each="ticket : ${reservation.tickets}">
+                Rząd <span th:text="${ticket.seat.rowNumber}">1</span>,
+                Miejsce <span th:text="${ticket.seat.seatNumber}">5</span>
+            </li>
+        </ul>
+    </div>
+
+    <br>
+    <div style="margin-top: 30px; display: flex; gap: 15px; justify-content: center;">
+        <a th:href="@{/reservations/{id}/pdf(id=${reservation.id})}"
+           style="display: inline-block; padding: 10px 20px; background: #28a745; color: white; text-decoration: none; border-radius: 4px; font-weight: bold;">
+            📄 Pobierz Bilet (PDF)
+        </a>
+
+        <a href="/"
+           style="display: inline-block; padding: 10px 20px; background: #6c757d; color: white; text-decoration: none; border-radius: 4px;">
+            Powrót do strony głównej
+        </a>
+    </div>
+</div>
+
+</body>
+</html>

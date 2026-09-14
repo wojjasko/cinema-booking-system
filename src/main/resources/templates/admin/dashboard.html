@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Panel Admina</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            background: linear-gradient(135deg, #0f0c20 0%, #15102a 50%, #06040a 100%);
+            color: #e0e0e0;
+            min-height: 100vh;
+            padding-bottom: 50px;
+        }
+
+        .navbar {
+            background-color: rgba(20, 16, 38, 0.9);
+            padding: 15px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: 40px;
+        }
+        .navbar-brand { font-size: 26px; font-weight: bold; color: #ffc107; text-decoration: none; }
+        .nav-btn { color: white; text-decoration: none; padding: 8px 16px; border-radius: 6px; font-weight: 600; background-color: rgba(255, 255, 255, 0.1); }
+
+        .container { max-width: 1100px; margin: 0 auto; padding: 0 20px; }
+        h1, h2 { color: #ffffff; }
+
+        .admin-actions { display: flex; gap: 15px; margin-bottom: 30px; }
+        .btn-action { background: linear-gradient(135deg, #ffc107 0%, #ff9800 100%); color: #120e24; text-decoration: none; padding: 12px 20px; border-radius: 8px; font-weight: bold; transition: all 0.2s; }
+        .btn-action:hover { transform: translateY(-2px); box-shadow: 0 4px 15px rgba(255, 193, 7, 0.4); }
+
+        table { width: 100%; border-collapse: collapse; background: rgba(30, 26, 54, 0.85); border-radius: 12px; overflow: hidden; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4); margin-bottom: 40px; }
+        th, td { padding: 14px 18px; text-align: left; border-bottom: 1px solid rgba(255, 255, 255, 0.08); }
+        th { background-color: rgba(15, 12, 32, 0.9); color: #ffc107; font-weight: 600; }
+        tr:hover { background-color: rgba(255, 255, 255, 0.03); }
+
+        .btn-seats { background-color: #17a2b8; color: white; text-decoration: none; padding: 6px 12px; border-radius: 6px; font-size: 13px; font-weight: bold; }
+        .btn-danger { background-color: #dc3545; color: white; border: none; padding: 6px 12px; border-radius: 6px; font-size: 13px; font-weight: bold; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+<div class="navbar">
+    <a href="/" class="navbar-brand">⚙️ Panel Admina</a>
+    <a href="/" class="nav-btn">← Strona główna</a>
+</div>
+
+<div class="container">
+    <h1>Zarządzanie Kinem</h1>
+
+    <div class="admin-actions">
+        <a href="/admin/movies/add" class="btn-action">➕ Dodaj Nowy Film</a>
+        <a href="/admin/screenings/add" class="btn-action">🎬 Zaplanuj Seans</a>
+    </div>
+
+    <h2>Harmonogram Seansów</h2>
+    <table>
+        <thead>
+        <tr>
+            <th>ID</th>
+            <th>Film</th>
+            <th>Sala</th>
+            <th>Data i Godzina</th>
+            <th>Cena</th>
+            <th>Akcje</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="s : ${screenings}">
+            <td th:text="${s.id}">1</td>
+            <td th:text="${s.movie.title}">Tytuł</td>
+            <td th:text="${s.cinemaHall.name}">Sala 1</td>
+            <td th:text="${#temporals.format(s.startTime, 'yyyy-MM-dd HH:mm')}">Data</td>
+            <td th:text="${s.price} + ' PLN'">25 PLN</td>
+            <td>
+                <a th:href="@{/admin/screenings/{id}/seats(id=${s.id})}" class="btn-seats">💺 Podgląd Sali</a>
+                <form th:action="@{/admin/screenings/delete/{id}(id=${s.id})}" method="post" style="display:inline;">
+                    <button type="submit" class="btn-danger" onclick="return confirm('Czy usunąć ten seans?')">Usuń</button>
+                </form>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+
+</body>
+</html>

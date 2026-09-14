@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Rejestracja - MojeKino</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            background: linear-gradient(135deg, #0f0c20 0%, #15102a 50%, #06040a 100%);
+            color: #e0e0e0;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 40px 0;
+        }
+
+        .auth-card {
+            background: rgba(25, 20, 45, 0.85);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            padding: 45px 40px;
+            border-radius: 16px;
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6), 0 0 20px rgba(40, 167, 69, 0.05);
+            width: 100%;
+            max-width: 480px;
+            backdrop-filter: blur(12px);
+        }
+
+        h2 {
+            text-align: center;
+            color: #ffffff;
+            margin-top: 0;
+            margin-bottom: 30px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            font-size: 26px;
+        }
+
+        .form-row { display: flex; gap: 15px; }
+        .form-group { margin-bottom: 20px; flex: 1; }
+        label { display: block; margin-bottom: 8px; font-size: 14px; color: #b0b0ca; font-weight: 500; }
+
+        input[type="email"], input[type="password"], input[type="text"], input[type="tel"], select {
+            width: 100%;
+            padding: 13px 15px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            background-color: rgba(10, 8, 22, 0.7);
+            color: #ffffff;
+            box-sizing: border-box;
+            font-size: 15px;
+            transition: all 0.25s ease;
+        }
+
+        .phone-input-group {
+            display: flex;
+            gap: 10px;
+        }
+
+        .phone-prefix {
+            width: 130px;
+            cursor: pointer;
+        }
+
+        select option {
+            background-color: #15102a;
+            color: white;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: #28a745;
+            box-shadow: 0 0 12px rgba(40, 167, 69, 0.4);
+            background-color: rgba(15, 12, 32, 0.9);
+        }
+
+        .btn-custom {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #28a745 0%, #1e7e34 100%);
+            border: none;
+            border-radius: 8px;
+            color: #ffffff;
+            font-weight: 700;
+            font-size: 16px;
+            cursor: pointer;
+            letter-spacing: 0.5px;
+            transition: all 0.25s ease;
+            box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
+            margin-top: 10px;
+        }
+
+        .btn-custom:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(40, 167, 69, 0.5);
+            background: linear-gradient(135deg, #34ce57 0%, #228e3b 100%);
+        }
+
+        .alert-error {
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 22px;
+            font-size: 14px;
+            text-align: center;
+            background-color: rgba(220, 53, 69, 0.25);
+            border: 1px solid #ff4d4d;
+            color: #ff8080;
+        }
+
+        .footer-text {
+            margin-top: 25px;
+            text-align: center;
+            font-size: 14px;
+            color: #d0d0e5;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+            padding-top: 20px;
+        }
+
+        .link-highlight {
+            color: #ffc107;
+            text-decoration: none;
+            font-weight: 700;
+            margin-left: 5px;
+        }
+
+        .link-highlight:hover { text-decoration: underline; }
+        .link-back { display: inline-block; margin-top: 12px; color: #a0a0c0; text-decoration: none; font-size: 13px; }
+        .link-back:hover { color: #ffffff; }
+    </style>
+</head>
+<body>
+
+<div class="auth-card">
+    <h2>Utwórz konto</h2>
+
+    <div th:if="${errorMessage}" class="alert-error" th:text="${errorMessage}">
+        Błąd rejestracji!
+    </div>
+
+    <form th:action="@{/register}" method="post">
+        <div class="form-row">
+            <div class="form-group">
+                <label>Imię</label>
+                <!-- pattern wymusza na poziomie HTML5 tylko litery (w tym polskie) z wielkiej litery -->
+                <input type="text" id="firstName" name="firstName" required
+                       placeholder="Jan"
+                       pattern="^[A-ZĄĆĘŁŃÓŚŹŻ][a-ząćęłńóśźżA-ZĄĆĘŁŃÓŚŹŻa-z\s-]*$"
+                       title="Imię musi zaczynać się od wielkiej litery i zawierać tylko litery.">
+            </div>
+            <div class="form-group">
+                <label>Nazwisko</label>
+                <input type="text" id="lastName" name="lastName" required
+                       placeholder="Kowalski"
+                       pattern="^[A-ZĄĆĘŁŃÓŚŹŻ][a-ząćęłńóśźżA-ZĄĆĘŁŃÓŚŹŻa-z\s-]*$"
+                       title="Nazwisko musi zaczynać się od wielkiej litery i zawierać tylko litery.">
+            </div>
+        </div>
+
+        <!-- sekcja numeru telefonu wraz z wyborem kierunkowego numeru telefonu -->
+        <div class="form-group">
+            <label>Numer Telefonu</label>
+            <div class="phone-input-group">
+                <select name="countryCode" class="phone-prefix">
+                    <option value="+48">🇵🇱 +48</option>
+                    <option value="+44">🇬🇧 +44</option>
+                    <option value="+49">🇩🇪 +49</option>
+                    <option value="+1">🇺🇸 +1</option>
+                    <option value="+33">🇫🇷 +33</option>
+                    <option value="+39">🇮🇹 +39</option>
+                    <option value="+34">🇪🇸 +34</option>
+                    <option value="+420">🇨🇿 +420</option>
+                    <option value="+421">🇸🇰 +421</option>
+                    <option value="+380">🇺🇦 +380</option>
+                </select>
+                <input type="tel" id="phoneNumber" name="phoneNumber" required
+                       placeholder="123456789"
+                       maxlength="9"
+                       pattern="[0-9]{9}"
+                       title="Wpisz dokładnie 9 cyfr bez spacji i liter.">
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>Adres E-mail</label>
+            <input type="email" name="email" required placeholder="jan.kowalski@email.com">
+        </div>
+
+        <div class="form-group">
+            <label>Hasło</label>
+            <input type="password" name="password" required placeholder="••••••••">
+        </div>
+
+        <button type="submit" class="btn-custom">ZAREJESTRUJ KONTO</button>
+    </form>
+
+    <div class="footer-text">
+        <span>Masz już konto?</span>
+        <a href="/login" class="link-highlight">Zaloguj się</a>
+        <br>
+        <a href="/" class="link-back">← Powrót do Strony Głównym</a>
+    </div>
+</div>
+
+<script>
+    // 1. walidacja telefonu
+    const phoneInput = document.getElementById('phoneNumber');
+    phoneInput.addEventListener('input', (e) => {
+        e.target.value = e.target.value.replace(/[^0-9]/g, '');
+    });
+
+    // 2. walidacja imienia i nazwiska
+    function setupNameInputValidation(inputId) {
+        const input = document.getElementById(inputId);
+        input.addEventListener('input', (e) => {
+            // usuwanie cyfr i znakow specjalnych
+            let val = e.target.value.replace(/[^a-zA-ZąćęłńóśźżĄĆĘŁŃÓŚŹŻ\s-]/g, '');
+
+            // automatyczna duza pierwsza litera
+            if (val.length > 0) {
+                val = val.replace(/(?:^|[\s-])\S/g, (a) => a.toUpperCase());
+            }
+            e.target.value = val;
+        });
+    }
+
+    setupNameInputValidation('firstName');
+    setupNameInputValidation('lastName');
+</script>
+
+</body>
+</html>

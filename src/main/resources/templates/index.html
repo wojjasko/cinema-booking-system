@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <title>Repertuar Kina - MojeKino</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            background: linear-gradient(135deg, #0f0c20 0%, #15102a 50%, #06040a 100%);
+            color: #e0e0e0;
+            min-height: 100vh;
+            padding-bottom: 50px;
+        }
+
+        .navbar {
+            background-color: rgba(20, 16, 38, 0.9);
+            padding: 15px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: 40px;
+            backdrop-filter: blur(10px);
+        }
+        .navbar-brand {
+            font-size: 26px;
+            font-weight: bold;
+            color: #ffc107;
+            text-decoration: none;
+            letter-spacing: 1px;
+        }
+        .nav-links {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+        .nav-btn {
+            color: white;
+            text-decoration: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-weight: 600;
+            background-color: rgba(255, 255, 255, 0.1);
+            transition: all 0.2s;
+        }
+        .nav-btn:hover { background-color: rgba(255, 255, 255, 0.25); }
+        .btn-logout { background-color: #dc3545; }
+        .btn-logout:hover { background-color: #bd2130; }
+        .btn-admin { background-color: #ffc107; color: #1a1a1a; }
+        .btn-admin:hover { background-color: #e0a800; }
+
+        .content-container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        h1 {
+            text-align: center;
+            color: #ffffff;
+            margin-bottom: 40px;
+            letter-spacing: 2px;
+            font-weight: 700;
+        }
+
+        .movie-card {
+            background: rgba(30, 26, 54, 0.7);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 30px;
+            display: flex;
+            gap: 25px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(5px);
+        }
+
+        .poster-container {
+            flex-shrink: 0;
+            width: 150px;
+            height: 220px;
+            border-radius: 8px;
+            overflow: hidden;
+            background-color: #0b0914;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+        }
+
+        .poster-container:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.4), 0 0 35px rgba(255, 255, 255, 0.2);
+        }
+
+        .poster-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .movie-details {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        .movie-header h2 {
+            margin: 0 0 8px 0;
+            color: #ffffff;
+            font-size: 24px;
+        }
+        .movie-meta {
+            font-size: 14px;
+            color: #a0a0b5;
+            margin-bottom: 12px;
+        }
+        .genre {
+            color: #ff4757;
+            font-weight: 600;
+        }
+        .description {
+            color: #cccccc;
+            font-size: 14px;
+            line-height: 1.5;
+            margin-bottom: 15px;
+        }
+
+        .screenings-section {
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+            padding-top: 15px;
+        }
+        .screenings-title {
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #8888a0;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+        .time-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        .btn-time {
+            display: inline-flex;
+            flex-direction: column;
+            align-items: center;
+            background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+            color: white;
+            text-decoration: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-weight: bold;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 10px rgba(0, 123, 255, 0.3);
+        }
+        .btn-time:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(0, 123, 255, 0.5);
+            background: linear-gradient(135deg, #0088ff 0%, #0066cc 100%);
+        }
+        .time-label {
+            font-size: 16px;
+        }
+        .hall-label {
+            font-size: 11px;
+            opacity: 0.8;
+            font-weight: normal;
+            margin-top: 2px;
+        }
+        .no-screenings {
+            color: #777;
+            font-style: italic;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+
+<!-- PASEK NAWIGACJI -->
+<div class="navbar">
+    <a href="/" class="navbar-brand">🎬 MojeKino</a>
+
+    <div class="nav-links">
+        <div sec:authorize="!isAuthenticated()">
+            <a href="/login" class="nav-btn">Zaloguj się</a>
+            <a href="/register" class="nav-btn" style="background-color: #28a745;">Rejestracja</a>
+        </div>
+
+        <div sec:authorize="isAuthenticated()" style="display: flex; gap: 15px; align-items: center;">
+            <span style="color: #aaa;">Zalogowany jako: <strong style="color: #fff;" sec:authentication="name">user@kino.pl</strong></span>
+
+            <a href="/my-reservations" class="nav-btn">Moje Bilety</a>
+
+            <a sec:authorize="hasRole('ADMIN')" href="/admin" class="nav-btn btn-admin">⚙️ Panel Admina</a>
+
+            <form th:action="@{/logout}" method="post" style="margin: 0;">
+                <button type="submit" class="nav-btn btn-logout" style="border: none; cursor: pointer; font-size: 14px;">Wyloguj</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- MAIN PAGE -->
+<div class="content-container">
+    <h1>REPERTUAR KINOWY</h1>
+
+    <div th:each="entry : ${screeningsByMovie}" class="movie-card">
+
+        <div class="poster-container">
+            <img th:src="${entry.key.posterUrl != null and !#strings.isEmpty(entry.key.posterUrl)} ? ${entry.key.posterUrl} : 'https://via.placeholder.com/150x220?text=Brak+Ok%C5%82adki'"
+                 alt="Plakat filmu"
+                 class="poster-img" />
+        </div>
+
+        <div class="movie-details">
+            <div>
+                <div class="movie-header">
+                    <h2 th:text="${entry.key.title}">Tytuł filmu</h2>
+                </div>
+
+                <div class="movie-meta">
+                    <span class="genre" th:text="${entry.key.genre}">Sci-Fi</span>
+                    <span style="margin: 0 8px; color: #555;">|</span>
+                    <span>⏱️ <span th:text="${entry.key.durationMinutes}">120</span> min</span>
+                </div>
+
+                <p class="description" th:text="${entry.key.description}">Opis filmu...</p>
+            </div>
+
+            <!-- seanse jako przyciski godzin -->
+            <div class="screenings-section">
+                <div class="screenings-title">Dostępne Seanse:</div>
+                <div class="time-buttons">
+                    <a th:each="screening : ${entry.value}"
+                       th:href="@{/screenings/{id}(id=${screening.id})}"
+                       class="btn-time">
+                        <span class="time-label" th:text="${#temporals.format(screening.startTime, 'dd.MM - HH:mm')}">18:00</span>
+                        <span class="hall-label" th:text="${screening.cinemaHall.name}">Sala 1</span>
+                    </a>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+</body>
+</html>

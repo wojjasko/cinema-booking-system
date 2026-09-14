@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:sec="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8">
+    <title>Moje Rezerwacje - MojeKino</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            background: linear-gradient(135deg, #0f0c20 0%, #15102a 50%, #06040a 100%);
+            color: #e0e0e0;
+            min-height: 100vh;
+            padding-bottom: 50px;
+        }
+
+        .navbar {
+            background-color: rgba(20, 16, 38, 0.9);
+            padding: 15px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: 40px;
+            backdrop-filter: blur(10px);
+        }
+        .navbar-brand { font-size: 26px; font-weight: bold; color: #ffc107; text-decoration: none; }
+        .nav-links { display: flex; gap: 15px; align-items: center; }
+        .nav-btn { color: white; text-decoration: none; padding: 8px 16px; border-radius: 6px; font-weight: 600; background-color: rgba(255, 255, 255, 0.1); transition: all 0.2s; }
+        .nav-btn:hover { background-color: rgba(255, 255, 255, 0.25); }
+        .btn-logout { background-color: #dc3545; }
+        .btn-logout:hover { background-color: #bd2130; }
+        .btn-admin { background-color: #ffc107; color: #1a1a1a; }
+        .btn-admin:hover { background-color: #e0a800; }
+
+        .container { max-width: 900px; margin: 0 auto; padding: 0 20px; }
+        h1 { text-align: center; color: #ffffff; margin-bottom: 30px; letter-spacing: 1px; }
+
+        .ticket-card {
+            background: rgba(30, 26, 54, 0.85);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-left: 5px solid #ffc107;
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 25px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(8px);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .ticket-details h3 { margin: 0 0 10px 0; color: #ffffff; font-size: 22px; }
+        .ticket-info { color: #b0b0ca; font-size: 14px; line-height: 1.6; }
+        .ticket-info strong { color: #ffffff; }
+
+        .badge-seats {
+            background-color: rgba(255, 193, 7, 0.15);
+            color: #ffc107;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-weight: bold;
+            border: 1px solid rgba(255, 193, 7, 0.3);
+        }
+
+        .btn-pdf {
+            background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+            color: white;
+            text-decoration: none;
+            padding: 10px 18px;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 14px;
+            transition: all 0.2s;
+            box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
+        }
+        .btn-pdf:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(0, 123, 255, 0.5); }
+        .no-reservations { text-align: center; color: #8888a0; font-size: 18px; margin-top: 50px; }
+    </style>
+</head>
+<body>
+
+<div class="navbar">
+    <a href="/" class="navbar-brand">🎬 MojeKino</a>
+    <div class="nav-links">
+        <span style="color: #aaa;">Zalogowany jako: <strong style="color: #fff;" sec:authentication="name">user@kino.pl</strong></span>
+        <a href="/" class="nav-btn">Repertuar</a>
+        <a sec:authorize="hasRole('ADMIN')" href="/admin" class="nav-btn btn-admin">⚙️ Panel Admina</a>
+        <form th:action="@{/logout}" method="post" style="margin: 0;">
+            <button type="submit" class="nav-btn btn-logout" style="border: none; cursor: pointer;">Wyloguj</button>
+        </form>
+    </div>
+</div>
+
+<div class="container">
+    <h1>Moje Rezerwacje</h1>
+
+    <div th:if="${#lists.isEmpty(reservations)}" class="no-reservations">
+        Nie masz jeszcze żadnych aktywnych rezerwacji.
+    </div>
+
+    <div th:each="r : ${reservations}" class="ticket-card">
+        <div class="ticket-details">
+            <h3 th:text="${r.screening.movie.title}">Tytuł Filmu</h3>
+            <div class="ticket-info">
+                📅 <strong>Data Seansu:</strong> <span th:text="${#temporals.format(r.screening.startTime, 'yyyy-MM-dd HH:mm')}">2026-09-14 18:00</span><br>
+                🏛️ <strong>Sala:</strong> <span th:text="${r.screening.cinemaHall.name}">Sala 1</span><br>
+                💺 <strong>Miejsca:</strong>
+                <span class="badge-seats" th:each="t : ${r.tickets}" th:text="'Rząd ' + ${t.seat.rowNumber} + ' M' + ${t.seat.seatNumber} + ' '">R1 M5</span>
+            </div>
+        </div>
+        <div>
+            <a th:href="@{/reservations/{id}/pdf(id=${r.id})}" class="btn-pdf">📄 Pobierz Bilet PDF</a>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>
