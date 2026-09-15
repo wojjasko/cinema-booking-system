@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Płatność BLIK - MojeKino</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            background: linear-gradient(135deg, #0f0c20 0%, #15102a 50%, #06040a 100%);
+            color: #e0e0e0;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 40px 0;
+        }
+
+        .payment-card {
+            background: rgba(25, 20, 45, 0.85);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            padding: 45px 40px;
+            border-radius: 16px;
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6);
+            width: 100%;
+            max-width: 440px;
+            backdrop-filter: blur(12px);
+            text-align: center;
+        }
+
+        .blik-logo {
+            background-color: #000;
+            color: #fff;
+            display: inline-block;
+            padding: 6px 16px;
+            border-radius: 8px;
+            font-weight: 900;
+            font-size: 22px;
+            letter-spacing: 2px;
+            border: 2px solid #eb1330;
+            margin-bottom: 20px;
+        }
+        .blik-logo span { color: #eb1330; }
+
+        .summary-box {
+            background: rgba(10, 8, 22, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 10px;
+            padding: 16px;
+            margin-bottom: 25px;
+            text-align: left;
+            font-size: 14px;
+        }
+
+        .summary-box strong { color: #ffffff; }
+
+        .timer-badge {
+            background-color: rgba(255, 193, 7, 0.15);
+            color: #ffc107;
+            padding: 8px;
+            border-radius: 6px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            font-size: 13px;
+            border: 1px solid rgba(255, 193, 7, 0.3);
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 15px;
+            border-radius: 10px;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            background-color: rgba(10, 8, 22, 0.9);
+            color: #ffffff;
+            font-size: 24px;
+            letter-spacing: 12px;
+            text-align: center;
+            box-sizing: border-box;
+            font-weight: bold;
+            transition: all 0.25s ease;
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #eb1330;
+            box-shadow: 0 0 15px rgba(235, 19, 48, 0.4);
+        }
+
+        .btn-pay {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #eb1330 0%, #a80015 100%);
+            border: none;
+            border-radius: 8px;
+            color: #ffffff;
+            font-weight: bold;
+            font-size: 17px;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            box-shadow: 0 4px 15px rgba(235, 19, 48, 0.3);
+            margin-top: 20px;
+        }
+
+        .btn-pay:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(235, 19, 48, 0.5);
+        }
+
+        .alert-error {
+            background-color: rgba(220, 53, 69, 0.25);
+            border: 1px solid #ff4d4d;
+            color: #ff8080;
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="payment-card">
+    <div class="blik-logo">B<span>LIK</span></div>
+    <h2>Płatność za Bilet</h2>
+
+    <div class="timer-badge">
+        ⏳ Czas na dokończenie płatności: <span id="countdown">02:00</span>
+    </div>
+
+    <div class="summary-box">
+        🎬 <strong>Film:</strong> <span th:text="${reservation.screening.movie.title}">Tytuł</span><br>
+        🏛️ <strong>Sala:</strong> <span th:text="${reservation.screening.cinemaHall.name}">Sala 1</span><br>
+        🎟️ <strong>Liczba Biletów:</strong> <span th:text="${#lists.size(reservation.tickets)}">2</span><br>
+        💰 <strong>Do zapłaty:</strong> <strong style="color: #ffc107; font-size: 16px;" th:text="${totalAmount} + ' PLN'">50.00 PLN</strong>
+    </div>
+
+    <div th:if="${errorMessage}" class="alert-error" th:text="${errorMessage}">
+        Błąd kodu BLIK!
+    </div>
+
+    <form th:action="@{/payment/{id}/pay(id=${reservation.id})}" method="post">
+        <label style="display: block; margin-bottom: 10px; color: #a0a0c0; font-size: 14px;">Wpisz 6-cyfrowy kod BLIK z aplikacji bankowej:</label>
+
+        <input type="text" id="blikCode" name="blikCode" maxlength="6" placeholder="______" required autocomplete="off">
+
+        <button type="submit" class="btn-pay">ZAPŁAĆ I POTWIERDŹ</button>
+    </form>
+</div>
+
+<script>
+    const blikInput = document.getElementById('blikCode');
+    blikInput.addEventListener('input', (e) => {
+        e.target.value = e.target.value.replace(/[^0-9]/g, '');
+    });
+
+    let time = 120;
+    const timerElement = document.getElementById('countdown');
+
+    const countdownInterval = setInterval(() => {
+        const minutes = Math.floor(time / 60);
+        let seconds = time % 60;
+        seconds = seconds < 10 ? '0' + seconds : seconds;
+
+        timerElement.innerText = `0${minutes}:${seconds}`;
+
+        if (time <= 0) {
+            clearInterval(countdownInterval);
+            alert("Czas na dokonanie płatności minął!");
+            window.location.href = "/";
+        }
+        time--;
+    }, 1000);
+</script>
+
+</body>
+</html>

@@ -36,17 +36,14 @@
         h1 { text-align: center; color: #ffffff; margin-bottom: 30px; letter-spacing: 1px; }
 
         .ticket-card {
-            background: rgba(30, 26, 54, 0.85);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-left: 5px solid #ffc107;
-            border-radius: 12px;
-            padding: 25px;
-            margin-bottom: 25px;
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
-            backdrop-filter: blur(8px);
             display: flex;
             justify-content: space-between;
-            align-items: center;
+            align-items: flex-start;
+            gap: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 16px;
         }
 
         .ticket-details h3 { margin: 0 0 10px 0; color: #ffffff; font-size: 22px; }
@@ -63,18 +60,41 @@
         }
 
         .btn-pdf {
-            background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
-            color: white;
-            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
             padding: 10px 18px;
-            border-radius: 8px;
+            background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+            color: #ffffff;
+            text-decoration: none;
             font-weight: bold;
-            font-size: 14px;
-            transition: all 0.2s;
-            box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
+            border-radius: 8px;
+            white-space: nowrap;
+            transition: all 0.25s ease;
         }
-        .btn-pdf:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(0, 123, 255, 0.5); }
+        .btn-pdf:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 123, 255, 0.4);
+        }
         .no-reservations { text-align: center; color: #8888a0; font-size: 18px; margin-top: 50px; }
+        .seats-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 6px;
+        }
+        .badge-seat {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 13px;
+            white-space: nowrap;
+            display: inline-block;
+        }
+
+
     </style>
 </head>
 <body>
@@ -98,18 +118,43 @@
         Nie masz jeszcze żadnych aktywnych rezerwacji.
     </div>
 
-    <div th:each="r : ${reservations}" class="ticket-card">
+    <div class="ticket-card" th:each="r : ${reservations}">
         <div class="ticket-details">
-            <h3 th:text="${r.screening.movie.title}">Tytuł Filmu</h3>
+            <h3 th:text="${r.screening.movie.title}">Diuna</h3>
+
             <div class="ticket-info">
-                📅 <strong>Data Seansu:</strong> <span th:text="${#temporals.format(r.screening.startTime, 'yyyy-MM-dd HH:mm')}">2026-09-14 18:00</span><br>
-                🏛️ <strong>Sala:</strong> <span th:text="${r.screening.cinemaHall.name}">Sala 1</span><br>
-                💺 <strong>Miejsca:</strong>
-                <span class="badge-seats" th:each="t : ${r.tickets}" th:text="'Rząd ' + ${t.seat.rowNumber} + ' M' + ${t.seat.seatNumber} + ' '">R1 M5</span>
+                📅 <strong>Data Seansu:</strong> <span th:text="${#temporals.format(r.screening.startTime, 'yyyy-MM-dd HH:mm')}">2026-09-18 18:00</span><br>
+                🏛️ <strong>Sala:</strong> <span th:text="${r.screening.cinemaHall.name}">Sala 3 - VIP Studio</span><br>
+
+                <strong>Status:</strong>
+                <span th:if="${r.status.name() == 'PAID'}" style="color: #28a745; font-weight: bold;">✅ OPŁACONA</span>
+                <span th:if="${r.status.name() == 'PENDING'}" style="color: #ffc107; font-weight: bold;">⏳ OCZEKUJE NA PŁATNOŚĆ</span>
+
+                <div style="margin-top: 10px;">
+                    <strong>💺 Zarezerwowane Miejsca:</strong>
+                    <div class="seats-container">
+                    <span class="badge-seat" th:each="t : ${r.tickets}"
+                          th:text="'Rząd ' + ${t.seat.rowNumber} + ' M' + ${t.seat.seatNumber}">
+                        Rząd 3 M1
+                    </span>
+                    </div>
+                </div>
             </div>
         </div>
-        <div>
-            <a th:href="@{/reservations/{id}/pdf(id=${r.id})}" class="btn-pdf">📄 Pobierz Bilet PDF</a>
+
+        <div style="align-self: center;">
+            <a th:if="${r.status.name() == 'PENDING'}"
+               th:href="@{/payment/{id}(id=${r.id})}"
+               class="btn-pdf"
+               style="background: linear-gradient(135deg, #eb1330 0%, #a80015 100%);">
+                💳 Opłać BLIK
+            </a>
+
+            <a th:if="${r.status.name() == 'PAID'}"
+               th:href="@{/reservations/{id}/pdf(id=${r.id})}"
+               class="btn-pdf">
+                📄 Pobierz Bilet PDF
+            </a>
         </div>
     </div>
 </div>

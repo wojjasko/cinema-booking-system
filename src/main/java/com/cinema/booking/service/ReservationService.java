@@ -1,12 +1,7 @@
 package com.cinema.booking.service;
 
-import com.cinema.booking.model.Reservation;
-import com.cinema.booking.model.Screening;
-import com.cinema.booking.model.Seat;
-import com.cinema.booking.model.Ticket;
-import com.cinema.booking.repository.ReservationRepository;
-import com.cinema.booking.repository.SeatRepository;
-import com.cinema.booking.repository.TicketRepository;
+import com.cinema.booking.model.*;
+import com.cinema.booking.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -28,7 +23,7 @@ public class ReservationService {
     private final ScreeningService screeningService;
 
     //pobiera zestaw (set) ID foteli, tkore sa zajete dla danego seansu
-    public Set<Long> getOccupiedSeatIds(Long screeningId){
+    public Set<Long> getOccupiedSeatIds(Long screeningId) {
         List<Ticket> tickets = ticketRepository.findByReservationScreeningId(screeningId);
 
         return tickets.stream()
@@ -38,35 +33,36 @@ public class ReservationService {
 
     //tworzenie nowej rezerwacji w bazie danych
     @Transactional
-    public Reservation createReservation(Long screeningId, List<Long> seatIds, String customerEmail){
+    public Reservation createReservation(Long screeningId, List<Long> seatIds, String customerEmail) {
         //1. pobieranie seansu z bazy
         Screening screening = screeningService.getScreeningById(screeningId);
 
-        //2. pobieranie wybranego fotelu z bazy
+        //2. pobieranie fotelow z bazy
         List<Seat> selectedSeats = seatRepository.findAllById(seatIds);
 
         //3. sprawdzanie czy ktorys fotel nie zostal juz wybrany
         Set<Long> occupiedSeatIds = getOccupiedSeatIds(screeningId);
-        for(Seat seat: selectedSeats){
-            if(occupiedSeatIds.contains(seat.getId())){
-                throw new RuntimeException("Miejsce o ID " + seat.getId() + " jest juz zajete.");
+        for (Seat seat : selectedSeats) {
+            if (occupiedSeatIds.contains(seat.getId())) {
+                throw new IllegalStateException("Miejsce o numerze " + seat.getSeatNumber() + " w rzędzie " + seat.getRowNumber() + " jest już zajęte.");
             }
         }
 
         //4. obliczanie lacznej ceny (liczba biletow * cena biletu za seans)
-        BigDecimal totalPrice = screening.getPrice().multiply(new BigDecimal(selectedSeats.size()));
+        BigDecimal totalPrice = screening.getPrice().multiply(BigDecimal.valueOf(selectedSeats.size()));
 
-        //5. tworzenie obiektu rezerwacji
+        //5. tworzenie nowego obiektu rezerwacji (ze statusem PENDING)
         Reservation reservation = Reservation.builder()
                 .screening(screening)
                 .customerEmail(customerEmail)
                 .reservationTime(LocalDateTime.now())
                 .totalPrice(totalPrice)
+                .status(ReservationStatus.PENDING)
                 .tickets(new ArrayList<>())
                 .build();
 
-        //6. tworzymy obiekty biletow i przypisujemy je do rezerwacji
-        for(Seat seat: selectedSeats){
+        //6. tworzenie biletow dla wybranych miejsc
+        for (Seat seat : selectedSeats) {
             Ticket ticket = Ticket.builder()
                     .reservation(reservation)
                     .seat(seat)
@@ -92,7 +88,7 @@ public class ReservationService {
         reservation.getTickets().remove(ticket);
         ticketRepository.delete(ticket);
 
-        // jesli rezerwacja nie ma juz zadnych biletow to ja usuwamy
+        // jesli rezerwacja nie ma juz zadnych biletow, to ja usuwamy
         if (reservation.getTickets().isEmpty()) {
             reservationRepository.delete(reservation);
         }
@@ -107,5 +103,19 @@ public class ReservationService {
                 reservationRepository.delete(res);
             }
         }
+    }
+
+    @Transactional
+    public boolean processBlikPayment(Long reservationId, String blikCode){
+        if (blikCode == null || !blikCode.matches("\\d{6}")){
+            return false;
+        }
+
+        Reservation reservation = reservationRepository.findById(reservationId)
+                .orElseThrow(() -> new IllegalArgumentException("Nie znaleziono rezerwacji"));
+
+        reservation.setStatus(ReservationStatus.PAID);
+        reservationRepository.save(reservation);
+        return true;
     }
 }
