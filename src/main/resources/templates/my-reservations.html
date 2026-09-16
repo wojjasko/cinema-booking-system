@@ -129,9 +129,10 @@
                 <strong>Status:</strong>
                 <span th:if="${r.status.name() == 'PAID'}" style="color: #28a745; font-weight: bold;">✅ OPŁACONA</span>
                 <span th:if="${r.status.name() == 'PENDING'}" style="color: #ffc107; font-weight: bold;">⏳ OCZEKUJE NA PŁATNOŚĆ</span>
+                <span th:if="${r.status.name() == 'CANCELLED'}" style="color: #dc3545; font-weight: bold;">❌ ANULOWANA (NIEOPŁACONA)</span>
 
                 <div style="margin-top: 10px;">
-                    <strong>💺 Zarezerwowane Miejsca:</strong>
+                    <strong th:if="${r.status.name() != 'CANCELLED'}">Zarezerwowane miejsca:</strong>
                     <div class="seats-container">
                     <span class="badge-seat" th:each="t : ${r.tickets}"
                           th:text="'Rząd ' + ${t.seat.rowNumber} + ' M' + ${t.seat.seatNumber}">
@@ -155,6 +156,11 @@
                class="btn-pdf">
                 📄 Pobierz Bilet PDF
             </a>
+
+            <span th:if="${r.status.name() == 'CANCELLED'}"
+                  style="color: #888; font-size: 13px; font-style: italic;">
+                Anulowana (brak wpłaty)
+            </span>
         </div>
     </div>
 </div>

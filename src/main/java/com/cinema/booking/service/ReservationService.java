@@ -24,10 +24,11 @@ public class ReservationService {
 
     //pobiera zestaw (set) ID foteli, tkore sa zajete dla danego seansu
     public Set<Long> getOccupiedSeatIds(Long screeningId) {
-        List<Ticket> tickets = ticketRepository.findByReservationScreeningId(screeningId);
+        //List<Ticket> tickets = ticketRepository.findByReservationScreeningId(screeningId);
 
-        return tickets.stream()
-                .map(ticket -> ticket.getSeat().getId())
+        return ticketRepository.findReservedSeatsByScreeningId(screeningId)
+                .stream()
+                .map(Seat::getId)
                 .collect(Collectors.toSet());
     }
 

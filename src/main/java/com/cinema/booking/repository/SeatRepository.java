@@ -10,4 +10,5 @@ import java.util.List;
 public interface SeatRepository extends JpaRepository<Seat, Long> {
     //JPA generuje zapytanie "znajdz wszystkie miejsca gdzie cinemaHall.id = jakis tam argument i posotruj rosnaco wg rzedu a potem wg numeru
     List<Seat> findByCinemaHallIdOrderByRowNumberAscSeatNumberAsc(Long cinemaHallId);
+
 }

@@ -120,7 +120,7 @@
 <body>
 
 <div class="auth-card">
-    <h2>🔑 Logowanie</h2>
+    <h2>Logowanie</h2>
 
     <div th:if="${param.error}" class="alert alert-error">
         Nieprawidłowy e-mail lub hasło!
@@ -132,7 +132,7 @@
     <form th:action="@{/login}" method="post">
         <div class="form-group">
             <label>Adres E-mail</label>
-            <input type="email" name="username" required placeholder="np. jan.kowalski@email.com">
+            <input type="email" name="username" required placeholder="xxx@email.com">
         </div>
 
         <div class="form-group">
@@ -147,7 +147,7 @@
         <span>Nie masz jeszcze konta?</span>
         <a href="/register" class="link-highlight">Zarejestruj się</a>
         <br>
-        <a href="/" class="link-back">← Powrót do Strony Głównym</a>
+        <a href="/" class="link-back">← Powrót do strony głównej</a>
     </div>
 </div>
 

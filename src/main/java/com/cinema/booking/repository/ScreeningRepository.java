@@ -12,10 +12,13 @@ import java.util.List;
 @Repository
 public interface ScreeningRepository extends JpaRepository<Screening, Long> {
 
-    // pobiera nadchodzace seanse
+    // 1. pobiera nadchodzace seanse
     List<Screening> findByStartTimeAfterOrderByStartTimeAsc(LocalDateTime now);
 
-    // Zapytanie JPQL sprawdzajace czy w danej sali istnieja seanse nachodzace czasowo
+    // 2. pobiera seanse zaczynajace sie w konkretnym przezdziale czasowym
+    List<Screening> findByStartTimeBetweenOrderByStartTimeAsc(LocalDateTime start, LocalDateTime end);
+
+    // 3. zapytanie JPQL sprawdzajace czy w danej sali istnieja seanse nachodzace sie czasowo
     @Query(value = "SELECT COUNT(*) > 0 FROM screenings s " +
             "JOIN movies m ON s.movie_id = m.id " +
             "WHERE s.cinema_hall_id = :hallId " +

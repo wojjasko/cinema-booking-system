@@ -64,6 +64,19 @@
             font-weight: 700;
         }
 
+        .filter-section {
+            margin: 30px 0;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 20px;
+            border-radius: 12px;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            gap: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
         .movie-card {
             background: rgba(30, 26, 54, 0.7);
             border: 1px solid rgba(255, 255, 255, 0.08);
@@ -168,10 +181,18 @@
             font-weight: normal;
             margin-top: 2px;
         }
-        .no-screenings {
-            color: #777;
-            font-style: italic;
-            font-size: 14px;
+        .filter-btn {
+            padding: 10px 18px;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            text-decoration: none;
+            font-weight: bold;
+            transition: all 0.2s;
+        }
+        .filter-btn:hover, .active-filter {
+            background: #eb1330;
+            box-shadow: 0 0 10px rgba(235, 19, 48, 0.5);
         }
     </style>
 </head>
@@ -205,6 +226,47 @@
 <div class="content-container">
     <h1>REPERTUAR KINOWY</h1>
 
+    <div class="filter-section">
+
+        <!-- 1. wyszukiwarka filmu po tytule -->
+        <div style="flex: 1; min-width: 220px;">
+            <input type="text" id="searchInput" placeholder="Wpisz tytuł szukanego filmu"
+                   style="width: 100%; padding: 11px 15px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.5); color: white; box-sizing: border-box; outline: none;">
+        </div>
+
+        <!-- 2. filtrowanie po gatunku -->
+        <div style="min-width: 150px;">
+            <select id="genreSelect" style="width: 100%; padding: 11px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.6); color: white; cursor: pointer; outline: none;">
+                <option value="">Wszystkie gatunki</option>
+                <option value="sci-fi">Sci-Fi</option>
+                <option value="akcja">Akcja</option>
+                <option value="dramat">Dramat</option>
+            </select>
+        </div>
+
+        <!-- 3. przyciski dat seansu -->
+        <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+            <a th:href="@{/}"
+               th:classappend="${selectedDate == null} ? 'active-filter' : ''"
+               class="filter-btn">Wszystkie</a>
+
+            <a th:href="@{/(date=${today})}"
+               th:classappend="${selectedDate == today} ? 'active-filter' : ''"
+               class="filter-btn">Dzisiaj</a>
+
+            <a th:href="@{/(date=${tomorrow})}"
+               th:classappend="${selectedDate == tomorrow} ? 'active-filter' : ''"
+               class="filter-btn">Jutro</a>
+
+            <!-- okno kalendarza daty -->
+            <form th:action="@{/}" method="get" style="display: inline-flex; align-items: center; margin: 0;">
+                <input type="date" name="date" th:value="${selectedDate}" onchange="this.form.submit()"
+                       style="padding: 9px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.5); color: white; cursor: pointer; color-scheme: dark;">
+            </form>
+        </div>
+    </div>
+
+
     <div th:each="entry : ${screeningsByMovie}" class="movie-card">
 
         <div class="poster-container">
@@ -216,7 +278,7 @@
         <div class="movie-details">
             <div>
                 <div class="movie-header">
-                    <h2 th:text="${entry.key.title}">Tytuł filmu</h2>
+                    <h2 class="movie-title" th:text="${entry.key.title}">Tytuł filmu</h2>
                 </div>
 
                 <div class="movie-meta">
@@ -248,4 +310,29 @@
 </div>
 
 </body>
+<script>
+    // filtrowanie filmów w czasie rzeczywistym po tytule oraz gatunku
+    function filterMovies() {
+        const titleQuery = document.getElementById('searchInput').value.toLowerCase().trim();
+        const selectedGenre = document.getElementById('genreSelect').value.toLowerCase().trim();
+        const movieCards = document.querySelectorAll('.movie-card');
+
+        movieCards.forEach(card => {
+            const title = card.querySelector('.movie-title')?.innerText.toLowerCase() || '';
+            const genre = card.querySelector('.genre')?.innerText.toLowerCase() || '';
+
+            const matchesTitle = titleQuery === '' || title.includes(titleQuery);
+            const matchesGenre = selectedGenre === '' || genre.includes(selectedGenre);
+
+            if (matchesTitle && matchesGenre) {
+                card.style.display = 'flex';
+            } else {
+                card.style.display = 'none';
+            }
+        });
+    }
+
+    document.getElementById('searchInput').addEventListener('input', filterMovies);
+    document.getElementById('genreSelect').addEventListener('change', filterMovies);
+</script>
 </html>

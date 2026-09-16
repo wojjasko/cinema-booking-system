@@ -24,7 +24,9 @@ public class SecurityConfig {
         http
                 .authorizeHttpRequests(auth -> auth
                     //sciezki widoczne dla kazdego
-                    .requestMatchers("/", "/register", "/login", "/css/**", "/js/**", "/images/**").permitAll()
+                    .requestMatchers("/", "/*", "/register", "/login",
+                            "/css/**", "/js/**", "/images/**", "/screenings/**",
+                            "/webjars/**").permitAll()
                     //dostep tylko dla adminow
                     .requestMatchers("/admin/**").hasRole("ADMIN")
                     //kazda innna sciezka wymaga logowania
