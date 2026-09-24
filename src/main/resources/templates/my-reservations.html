@@ -23,14 +23,82 @@
             margin-bottom: 40px;
             backdrop-filter: blur(10px);
         }
-        .navbar-brand { font-size: 26px; font-weight: bold; color: #ffc107; text-decoration: none; }
-        .nav-links { display: flex; gap: 15px; align-items: center; }
-        .nav-btn { color: white; text-decoration: none; padding: 8px 16px; border-radius: 6px; font-weight: 600; background-color: rgba(255, 255, 255, 0.1); transition: all 0.2s; }
-        .nav-btn:hover { background-color: rgba(255, 255, 255, 0.25); }
-        .btn-logout { background-color: #dc3545; }
-        .btn-logout:hover { background-color: #bd2130; }
-        .btn-admin { background-color: #ffc107; color: #1a1a1a; }
-        .btn-admin:hover { background-color: #e0a800; }
+
+        .navbar-brand {
+            font-size: 26px;
+            font-weight: bold;
+            color: #ffc107;
+            text-decoration: none;
+            letter-spacing: 1px;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .user-greeting {
+            color: #aaa;
+            font-size: 14px;
+            margin-right: 5px;
+        }
+
+        .user-greeting strong {
+            color: #fff;
+        }
+
+        .nav-btn {
+            color: white;
+            text-decoration: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 14px;
+            background-color: rgba(255, 255, 255, 0.1);
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+        }
+
+        .nav-btn:hover {
+            background-color: rgba(255, 255, 255, 0.25);
+        }
+
+        .nav-btn-primary {
+            background-color: #007bff;
+        }
+
+        .nav-btn-primary:hover {
+            background-color: #0056b3;
+        }
+
+        .nav-btn-success {
+            background-color: #28a745;
+        }
+
+        .nav-btn-success:hover {
+            background-color: #218838;
+        }
+
+        .btn-admin {
+            background-color: #ffc107;
+            color: #1a1a1a;
+        }
+
+        .btn-admin:hover {
+            background-color: #e0a800;
+        }
+
+        .btn-logout {
+            background-color: #dc3545;
+        }
+
+        .btn-logout:hover {
+            background-color: #bd2130;
+        }
 
         .container { max-width: 900px; margin: 0 auto; padding: 0 20px; }
         h1 { text-align: center; color: #ffffff; margin-bottom: 30px; letter-spacing: 1px; }
@@ -101,13 +169,32 @@
 
 <div class="navbar">
     <a href="/" class="navbar-brand">🎬 MojeKino</a>
+
     <div class="nav-links">
-        <span style="color: #aaa;">Zalogowany jako: <strong style="color: #fff;" sec:authentication="name">user@kino.pl</strong></span>
-        <a href="/" class="nav-btn">Repertuar</a>
-        <a sec:authorize="hasRole('ADMIN')" href="/admin" class="nav-btn btn-admin">⚙️ Panel Admina</a>
-        <form th:action="@{/logout}" method="post" style="margin: 0;">
-            <button type="submit" class="nav-btn btn-logout" style="border: none; cursor: pointer;">Wyloguj</button>
-        </form>
+        <!-- Niezalogowany uzytkownik -->
+        <th:block sec:authorize="!isAuthenticated()">
+            <a href="/login" class="nav-btn">Zaloguj się</a>
+            <a href="/register" class="nav-btn nav-btn-success">Rejestracja</a>
+        </th:block>
+
+        <!-- Zalogowany uzytkownik -->
+        <th:block sec:authorize="isAuthenticated()">
+            <span class="user-greeting">
+                Zalogowany jako: <strong sec:authentication="name">user@kino.pl</strong>
+            </span>
+
+            <a href="/" class="nav-btn">Strona główna</a>
+            <a href="/my-reservations" class="nav-btn">Moje bilety</a>
+            <a href="/profile" class="nav-btn nav-btn-primary">Moje konto</a>
+
+            <!-- Panel administratora -->
+            <a sec:authorize="hasRole('ADMIN')" href="/admin" class="nav-btn btn-admin">⚙️ Panel admina</a>
+
+            <!-- Przycisk wylogowania -->
+            <form th:action="@{/logout}" method="post" style="margin: 0;">
+                <button type="submit" class="nav-btn btn-logout">Wyloguj</button>
+            </form>
+        </th:block>
     </div>
 </div>
 

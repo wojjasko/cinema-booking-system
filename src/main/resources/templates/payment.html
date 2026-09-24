@@ -106,6 +106,50 @@
             box-shadow: 0 6px 20px rgba(235, 19, 48, 0.5);
         }
 
+        .nav-action-buttons {
+            display: flex;
+            gap: 12px;
+            margin-top: 20px;
+        }
+
+        .btn-back, .btn-home {
+            flex: 1;
+            padding: 11px 14px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 600;
+            transition: all 0.25s ease;
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+            box-sizing: border-box;
+        }
+
+        .btn-back {
+            background-color: rgba(255, 255, 255, 0.08);
+            color: #e0e0e0;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+        }
+
+        .btn-back:hover {
+            background-color: rgba(255, 255, 255, 0.2);
+            color: #ffffff;
+            transform: translateY(-2px);
+        }
+
+        .btn-home {
+            background-color: rgba(255, 193, 7, 0.1);
+            color: #ffc107;
+            border: 1px solid rgba(255, 193, 7, 0.3);
+        }
+
+        .btn-home:hover {
+            background-color: rgba(255, 193, 7, 0.25);
+            color: #ffffff;
+            transform: translateY(-2px);
+        }
+
         .alert-error {
             background-color: rgba(220, 53, 69, 0.25);
             border: 1px solid #ff4d4d;
@@ -145,6 +189,11 @@
 
         <button type="submit" class="btn-pay">ZAPŁAĆ I POTWIERDŹ</button>
     </form>
+
+    <div class="nav-action-buttons">
+        <a href="/" class="btn-home">Strona główna</a>
+        <a href="/my-reservations" class="btn-back">Moje rezerwacje</a>
+    </div>
 </div>
 
 <script>
