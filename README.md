@@ -1,35 +1,35 @@
 # 🎬 Cinema Booking Management System
 
-Aplikacja webowa Full-stack służąca do rezerwacji biletów kinowych online, interaktywnego wyboru miejsc na sali oraz zaawansowanego zarządzania seansami, filmami i rezerwacjami z poziomu panelu administratora.
+A Full-stack web application for online cinema ticket booking, interactive seat selection, and advanced management of screenings, movies, and reservations via an admin panel.
 
 ---
 
-## 🌟 Kluczowe Funkcjonalności
+## Key Features
 
-### 🎟️ Strona Główna & Rezerwacja Biletów
-* **Agregacja seansów per film:** Wyświetlanie pojedynczego kafelka dla danego filmu z plakatem, czasem trwania i gatunkiem oraz przyciskami dat i godzin seansów.
-* **Interaktywny wybór miejsc:** Wizualny plan sali kinowej z dynamicznym oznaczaniem miejsc wolnych i zajętych w czasie rzeczywistym.
-* **Moje Rezerwacje:** Panel klienta ze spisem zarezerwowanych biletów oraz możliwością pobrania potwierdzenia w formacie PDF.
+### Ticket Booking & Public Area
+* **Movie Screening Aggregation:** Displaying a single tile per movie featuring a poster, duration, genre, along with date and time buttons.
+* **Interactive Seat Selection:** A visual cinema hall layout with real-time marking of available and occupied seats.
+* **My Reservations:** A client panel listing booked tickets with an option to download confirmation in PDF format.
 
-### ⚙️ Panel Administratora & Wgląd w Salę
-* **Zarządzanie Repertuarem (CRUD):** Dodawanie i usuwanie filmów oraz planowanie nowych seansów.
-* **Algorytm weryfikacji nakładania seansów:** Bezpieczne sprawdzanie w bazie danych SQL, czy wybrana sala kinowa nie jest już zajęta w danym przedziale czasowym (uwzględnia czas trwania filmu).
-* **Interaktywny podgląd sali dla Admina:** Możliwość podglądu zajętych foteli z dymkami (Tooltip CSS) zawierającymi dane klienta (e-mail, data i czas rezerwacji, ID transakcji).
-* **Elastyczne anulowanie rezerwacji:** Możliwość anulowania rezerwacji miejsca/miejsc danego klienta dla każdego seansu.
+### Admin Panel & Hall Management
+- **Repertoire Management (CRUD):** Adding and removing movies, plus scheduling new screenings.
+- **Overlap Prevention Algorithm:** SQL-based validation ensuring a screening hall is not double-booked during a specific time slot (factoring in movie duration).
+- **Admin Hall Preview:** Visual overview of occupied seats featuring CSS Tooltips with client data (email, reservation date/time, transaction ID).
+- **Flexible Cancellation:** Ability to cancel specific client reservations for any screening.
 
-### 🔒 Bezpieczeństwo i Rejestracja
-* **Role-Based Access Control:** Podział uprawnień użytkowników na konta klienta (`ROLE_USER`) oraz administratora (`ROLE_ADMIN`) z użyciem Spring Security.
-* **Zaawansowana walidacja rejestracji:** 
-  * Wybór międzynarodowych kodów kierunkowych (np. 🇵🇱 +48, 🇬🇧 +44, 🇩🇪 +49).
-  * Automatyczna blokada wprowadzania znaków niebędących cyframi w polu telefonu.
-  * Auto-kapitalizacja pierwszej litery imienia/nazwiska z blokadą cyfr i znaków specjalnych w czasie rzeczywistym.
+### Security & Registration
+- **Role-Based Access Control:** Separation of user privileges into client (`ROLE_USER`) and administrator (`ROLE_ADMIN`) accounts via Spring Security.
+- **Advanced Registration Validation:** 
+  - International dialing code selection (e.g., +48, +44, +49).
+  - Automatic input blocking for non-numeric characters in the phone field.
+  - Real-time auto-capitalization of first and last names with restriction on digits and special characters.
 
 ---
 
-## 🛠️ Stack Techniczny
+## 🛠️ Tech Stack
 
-* **Backend:** Java 17, Spring Boot (Spring Security, Spring Data JPA)
-* **Database:** PostgreSQL
-* **Frontend:** Thymeleaf, HTML5, CSS3 (Glassmorphism, Dark Theme), JavaScript (ES6)
-* **Build Tool:** Maven
-* **Libraries:** Lombok
+- **Backend:** Java 17, Spring Boot (Spring Security, Spring Data JPA)
+- **Database:** PostgreSQL
+- **Frontend:** Thymeleaf, HTML5, CSS3 (Glassmorphism, Dark Theme), JavaScript (ES6)
+- **Build Tool:** Maven
+- **Libraries:** Lombok
