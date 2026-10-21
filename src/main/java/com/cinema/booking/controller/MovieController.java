@@ -4,8 +4,10 @@ import com.cinema.booking.model.Movie;
 import com.cinema.booking.model.Screening;
 import com.cinema.booking.repository.MovieRepository;
 import com.cinema.booking.repository.ScreeningRepository;
+import com.cinema.booking.service.MovieService;
 import com.cinema.booking.service.ScreeningService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -25,17 +27,16 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class MovieController {
 
-    private final ScreeningService screeningService;
-    private final MovieRepository movieRepository;
     private final ScreeningRepository screeningRepository;
 
     @GetMapping("/")
     public String showHomePage(@RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
                                Model model) {
 
+        // pobieramy seanse tylko dla filmow znajdujacych sie na aktualnej stronie
         List<Screening> screenings;
 
-        if (date != null){
+        if (date != null) {
             LocalDateTime startOfDay = date.atStartOfDay();
             LocalDateTime endOfDay = date.atTime(LocalTime.MAX);
             screenings = screeningRepository.findByStartTimeBetweenOrderByStartTimeAsc(startOfDay, endOfDay);
@@ -51,11 +52,11 @@ public class MovieController {
                         Collectors.toList()
                 ));
 
-        // sortowanie seansow chronologicznie dla kazdego filmu
         screeningsByMovie.forEach((movie, screeningList) ->
                 screeningList.sort(Comparator.comparing(Screening::getStartTime))
         );
 
+        // przekazujemy dane paginacji i seansow do widoku
         model.addAttribute("screeningsByMovie", screeningsByMovie);
         model.addAttribute("selectedDate", date);
         model.addAttribute("today", LocalDate.now());

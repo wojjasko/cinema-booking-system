@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+  postgres-db:
+    image: postgres:15-alpine
+    container_name: cinema-db
+    environment:
+      POSTGRES_DB: cinemadb
+      POSTGRES_USER: cinema
+      POSTGRES_PASSWORD: cinema1708
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: always
+
+  cinema-app:
+    build: .
+    container_name: cinema-app
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-db:5432/cinemadb
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: 1708
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+    depends_on:
+      - postgres-db
+    restart: always
+
+volumes:
+  postgres_data:

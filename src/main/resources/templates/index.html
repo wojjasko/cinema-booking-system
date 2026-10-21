@@ -286,13 +286,13 @@
 
     <div class="filter-section">
 
-        <!-- 1. wyszukiwarka filmu po tytule -->
+        <!-- 1. Wyszukiwarka filmu po tytule -->
         <div style="flex: 1; min-width: 220px;">
             <input type="text" id="searchInput" placeholder="Wpisz tytuł szukanego filmu"
                    style="width: 100%; padding: 11px 15px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.5); color: white; box-sizing: border-box; outline: none;">
         </div>
 
-        <!-- 2. filtrowanie po gatunku -->
+        <!-- 2. Filtrowanie po gatunku -->
         <div style="min-width: 150px;">
             <select id="genreSelect" style="width: 100%; padding: 11px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.6); color: white; cursor: pointer; outline: none;">
                 <option value="">Wszystkie gatunki</option>
@@ -302,7 +302,7 @@
             </select>
         </div>
 
-        <!-- 3. przyciski dat seansu -->
+        <!-- 3. Przyciski dat seansu -->
         <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
             <a th:href="@{/}"
                th:classappend="${selectedDate == null} ? 'active-filter' : ''"
@@ -316,7 +316,7 @@
                th:classappend="${selectedDate == tomorrow} ? 'active-filter' : ''"
                class="filter-btn">Jutro</a>
 
-            <!-- okno kalendarza daty -->
+            <!-- Okno kalendarza daty -->
             <form th:action="@{/}" method="get" style="display: inline-flex; align-items: center; margin: 0;">
                 <input type="date" name="date" th:value="${selectedDate}" onchange="this.form.submit()"
                        style="padding: 9px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.5); color: white; cursor: pointer; color-scheme: dark;">
@@ -324,8 +324,9 @@
         </div>
     </div>
 
-
-    <div th:each="entry : ${screeningsByMovie}" class="movie-card">
+    <div th:each="entry : ${screeningsByMovie}"
+         th:if="${entry.value != null and !#lists.isEmpty(entry.value)}"
+         class="movie-card">
 
         <div class="poster-container">
             <img th:src="${entry.key.posterUrl != null and !#strings.isEmpty(entry.key.posterUrl)} ? ${entry.key.posterUrl} : 'https://via.placeholder.com/150x220?text=Brak+Ok%C5%82adki'"
@@ -348,28 +349,47 @@
                 <p class="description" th:text="${entry.key.description}">Opis filmu...</p>
             </div>
 
-            <!-- seanse jako przyciski godzin -->
             <div class="screenings-section">
                 <div class="screenings-title">Dostępne Seanse:</div>
                 <div class="time-buttons">
                     <a th:each="screening : ${entry.value}"
                        th:href="@{/screenings/{id}(id=${screening.id})}"
                        class="btn-time">
-                        <span class="time-label" th:text="${#temporals.format(screening.startTime, 'dd.MM - HH:mm')}">18:00</span>
+                        <span class="time-label"
+                              th:text="${selectedDate != null} ? ${#temporals.format(screening.startTime, 'HH:mm')} : ${#temporals.format(screening.startTime, 'dd.MM - HH:mm')}">18:00</span>
                         <span class="hall-label" th:text="${screening.cinemaHall.name}">Sala 1</span>
                     </a>
                 </div>
             </div>
-
         </div>
 
+    </div>
+
+    <!-- PASEK PAGINACJI -->
+    <div class="pagination-container" th:if="${totalPages > 1}"
+         style="display: flex; justify-content: center; align-items: center; gap: 10px; margin-top: 40px; margin-bottom: 20px;">
+
+        <a th:if="${currentPage > 0}"
+           th:href="@{/(page=${currentPage - 1}, date=${selectedDate})}"
+           class="nav-btn" style="text-decoration: none;">&laquo; Poprzednia</a>
+
+        <span th:each="i : ${#numbers.sequence(0, totalPages - 1)}">
+            <a th:href="@{/(page=${i}, date=${selectedDate})}"
+               th:text="${i + 1}"
+               class="nav-btn"
+               th:style="${i == currentPage} ? 'background-color: #ffc107; color: #111; font-weight: bold;' : ''"
+               style="text-decoration: none; padding: 8px 14px;">1</a>
+        </span>
+
+        <a th:if="${currentPage < totalPages - 1}"
+           th:href="@{/(page=${currentPage + 1}, date=${selectedDate})}"
+           class="nav-btn" style="text-decoration: none;">Następna &raquo;</a>
     </div>
 
 </div>
 
 </body>
 <script>
-    // filtrowanie filmów w czasie rzeczywistym po tytule oraz gatunku
     function filterMovies() {
         const titleQuery = document.getElementById('searchInput').value.toLowerCase().trim();
         const selectedGenre = document.getElementById('genreSelect').value.toLowerCase().trim();

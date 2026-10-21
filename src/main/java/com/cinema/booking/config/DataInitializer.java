@@ -9,6 +9,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -252,6 +253,23 @@ public class DataInitializer {
                 );
 
                 screeningRepository.saveAll(screenings);
+            }
+
+            List<Screening> allScreenings = screeningRepository.findAll();
+            LocalDateTime currentTime = LocalDateTime.now();
+
+            if (!allScreenings.isEmpty()
+                    && screeningRepository.findByStartTimeAfterOrderByStartTimeAsc(currentTime).isEmpty()) {
+
+                LocalDateTime earliest = allScreenings.stream()
+                        .map(Screening::getStartTime)
+                        .min(LocalDateTime::compareTo)
+                        .orElse(currentTime);
+
+                long shiftDays = ChronoUnit.DAYS.between(earliest.toLocalDate(), currentTime.toLocalDate()) + 1;
+
+                allScreenings.forEach(s -> s.setStartTime(s.getStartTime().plusDays(shiftDays)));
+                screeningRepository.saveAll(allScreenings);
             }
         };
     }

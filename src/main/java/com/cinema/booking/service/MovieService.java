@@ -1,4 +1,8 @@
 package com.cinema.booking.service;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 
 
 import com.cinema.booking.model.Movie;
@@ -8,8 +12,8 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 
-@Service // rejestruje te klase jako komponent logiki biznesowej.
-@RequiredArgsConstructor // automatycznie generuje konstruktor dla wszystkich pól oznaczonych jako final
+@Service
+@RequiredArgsConstructor
 public class MovieService {
 
     private final MovieRepository movieRepository;
@@ -21,6 +25,11 @@ public class MovieService {
     public Movie getMovieById(Long id){
         return movieRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Nie znaleziono filmu o podanym id."));
+    }
+
+    public Page<Movie> getPaginatedMovies(int page, int size, String sortBy){
+        Pageable pageable = PageRequest.of(page, size, Sort.by(sortBy).ascending());
+        return movieRepository.findAll(pageable);
     }
 
 }
