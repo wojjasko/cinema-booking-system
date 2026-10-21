@@ -12,13 +12,13 @@ import org.springframework.security.web.SecurityFilterChain;
 @EnableWebSecurity
 public class SecurityConfig {
 
-    //szyfrowanie hasel algorytmem BCrypt
+    //passwords encryption with BCrypt Algorithm
     @Bean
     public PasswordEncoder passwordEncoder(){
         return new BCryptPasswordEncoder();
     }
 
-    //lancuch filtrow chroniacy sciezki w aplikacji
+    //chain of filters that protects specific paths in applications
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
@@ -30,7 +30,7 @@ public class SecurityConfig {
                                 "/webjars/**").permitAll()
                     .anyRequest().authenticated()
                 )
-                //konfiguracja formularza logowania
+                //login form configuration
                 .formLogin(form -> form
                     .loginPage("/login")
                     .defaultSuccessUrl("/", false)
@@ -39,7 +39,7 @@ public class SecurityConfig {
                 .sessionManagement(session -> session
                     .maximumSessions(1)
                 )
-                //konfiguracja wylogowania
+                //logout configuration
                 .logout(logout -> logout
                     .logoutUrl("/logout")
                     .logoutSuccessUrl("/")
