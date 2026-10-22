@@ -5,6 +5,9 @@ import com.cinema.booking.repository.ScreeningRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.List;
 
 @Service
@@ -21,4 +24,15 @@ public class ScreeningService {
         return screeningRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Nie znaleziono seansu o id: " + id));
     }
+
+    public List<Screening> getUpcomingScreenings(){
+        return screeningRepository.findByStartTimeAfterOrderByStartTimeAsc(LocalDateTime.now());
+    }
+
+    public List<Screening> getScreeningsForDate(LocalDate date){
+        return screeningRepository.findByStartTimeBetweenOrderByStartTimeAsc(
+                date.atStartOfDay(),
+                date.atTime(LocalTime.MAX));
+    }
+
 }
