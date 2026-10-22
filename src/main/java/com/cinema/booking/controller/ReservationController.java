@@ -2,7 +2,6 @@ package com.cinema.booking.controller;
 
 import com.cinema.booking.model.Reservation;
 import com.cinema.booking.model.ReservationStatus;
-import com.cinema.booking.repository.ReservationRepository;
 import com.cinema.booking.service.PdfService;
 import com.cinema.booking.service.ReservationService;
 import lombok.RequiredArgsConstructor;
@@ -23,44 +22,42 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ReservationController {
 
-    private final ReservationRepository reservationRepository;
+    private static final String GUEST_EMAIL = "guest@kino.pl";
+
     private final ReservationService reservationService;
     private final PdfService pdfService;
 
-    // 1. obsluga formularza z wybranmi miejscami pod /reserve
+    // 1. form handling with chosen seats under /reserve
     @PostMapping("/reserve")
-    public String processReservation(@RequestParam Long screeningId,
+    public String createReservation(@RequestParam Long screeningId,
                                      @RequestParam(name = "seatIds", required = false) List<Long> seatIds,
                                      Principal principal){
         if (seatIds == null || seatIds.isEmpty()){
             return "redirect:/screenings/" + screeningId + "?error=no_seats";
         }
 
-        String userEmail = principal != null ? principal.getName() : "guest@kino.pl";
+        String userEmail = principal != null ? principal.getName() : GUEST_EMAIL;
         Reservation reservation = reservationService.createReservation(screeningId, seatIds, userEmail);
 
-        //przekierwanie na strone platnosci BLIK
+        //redirect to BLIK's payment page
         return "redirect:/payment/" + reservation.getId();
     }
 
-    // 2. widok formularza BLIK
+    // 2. BLIK form view
     @GetMapping("/payment/{id}")
     public String showPaymentPage(@PathVariable Long id, Model model){
-        Reservation reservation = reservationRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Niepoprawny identyfikator rezerwacji"));
+        Reservation reservation = reservationService.getReservationById(id);
 
-        if (reservation.getStatus() == ReservationStatus.PAID){
+        //if the payment is paid or cancelled - we head back to the list
+        if (reservation.getStatus() != ReservationStatus.PENDING){
             return "redirect:/my-reservations";
         }
 
-        double totalAmount = reservation.getTotalPrice() != null ? reservation.getTotalPrice().doubleValue() : 0.0;
-
         model.addAttribute("reservation", reservation);
-        model.addAttribute("totalAmount", totalAmount);
         return "payment";
     }
 
-    // 3. przetwarzanie platnosci BLIK
+    // 3. processing BLIK payment
     @PostMapping("/payment/{id}/pay")
     public String processPayment(@PathVariable Long id,
                                  @RequestParam String blikCode,
@@ -68,11 +65,7 @@ public class ReservationController {
         boolean success = reservationService.processBlikPayment(id, blikCode);
 
         if (!success) {
-            Reservation reservation = reservationRepository.findById(id).orElseThrow();
-            double totalAmount = reservation.getTotalPrice() != null ? reservation.getTotalPrice().doubleValue() : 0.0;
-
-            model.addAttribute("reservation", reservation);
-            model.addAttribute("totalAmount", totalAmount);
+            model.addAttribute("reservation", reservationService.getReservationById(id));
             model.addAttribute("errorMessage", "Nieprawidłowy kod BLIK! Wpisz dokładnie 6 cyfr.");
             return "payment";
         }
@@ -80,40 +73,37 @@ public class ReservationController {
         return "redirect:/my-reservations?paid=true";
     }
 
-    // 4. pobieranie biletow w formacie PDF
+    // 4. downloading tickets in PDF format
     @GetMapping("/reservations/{id}/pdf")
     public ResponseEntity<byte[]> downloadTicketPdf(@PathVariable Long id){
-        //1. pobieranie rezerwacji z bazy
-        Reservation reservation = reservationRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Nie znaleziono rezerwacji o id: " + id));
+        Reservation reservation = reservationService.getReservationById(id);
 
-        // dodatkowe zabezpieczenie przed pobraniem nieoplaconej rezerwacji
-        if (reservation.getStatus() != ReservationStatus.PAID) {
-            throw new IllegalStateException("Nie można pobrać biletu dla nieopłaconej rezerwacji.");
+        //additional security for downloading unpaid reservation
+        if(reservation.getStatus() != ReservationStatus.PAID){
+            throw new IllegalStateException("Nie można pobrać biletu dla nieopłaconej rezerwacji");
         }
 
-        //2. generowanie bajtow pliku PDF
+        //generating bytes of PDF file
         byte[] pdfBytes = pdfService.generateTicketPdf(reservation);
 
-        //3. przygotowanie naglowkow odpowiedzi HTTP
+        //preparing headers of HTTP response
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_PDF);
         headers.setContentDispositionFormData("attachment", "Bilet_Kino_Rezerwacja_" + id + ".pdf");
 
-        //4. zwrocenie gotowej odpowiedzi z bajtami pliku i kodem HTTP 200 OK
+        //returning answer with the bytes of the file and HTTP 200 OK code
         return ResponseEntity.ok()
                 .headers(headers)
                 .body(pdfBytes);
     }
 
-    // 5. widok rezerwacji
+    // 5. reservation view for logged user
     @GetMapping("/my-reservations")
     public String showMyReservations(Model model, Principal principal) {
         if (principal == null) {
             return "redirect:/login";
         }
-        List<Reservation> userReservations = reservationRepository.findByCustomerEmailOrderByIdDesc(principal.getName());
-        model.addAttribute("reservations", userReservations);
+        model.addAttribute("reservations", reservationService.getUserReservations(principal.getName()));
         return "my-reservations";
     }
 }
