@@ -1,6 +1,7 @@
 package com.cinema.booking.repository;
 
 import com.cinema.booking.model.Screening;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -12,13 +13,15 @@ import java.util.List;
 @Repository
 public interface ScreeningRepository extends JpaRepository<Screening, Long> {
 
-    // 1. pobiera nadchodzace seanse
+    //1. download all upcoming screenings (movie and hall are downloaded instantly with one query
+    @EntityGraph(attributePaths = {"movie", "cinemaHall"})
     List<Screening> findByStartTimeAfterOrderByStartTimeAsc(LocalDateTime now);
 
-    // 2. pobiera seanse zaczynajace sie w konkretnym przezdziale czasowym
+    //2. download screenings starting at specific time range
+    @EntityGraph(attributePaths = {"movie", "cinemaHall"})
     List<Screening> findByStartTimeBetweenOrderByStartTimeAsc(LocalDateTime start, LocalDateTime end);
 
-    // 3. zapytanie JPQL sprawdzajace czy w danej sali istnieja seanse nachodzace sie czasowo
+    //3. native SQL query (PostgreSQL) checking if there are overlapping (by time) screenings in specific hall
     @Query(value = "SELECT COUNT(*) > 0 FROM screenings s " +
             "JOIN movies m ON s.movie_id = m.id " +
             "WHERE s.cinema_hall_id = :hallId " +
