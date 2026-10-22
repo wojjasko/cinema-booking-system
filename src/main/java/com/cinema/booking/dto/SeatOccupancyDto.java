@@ -1,4 +1,4 @@
-package com.cinema.booking;
+package com.cinema.booking.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

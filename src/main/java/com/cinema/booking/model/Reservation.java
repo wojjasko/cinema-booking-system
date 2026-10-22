@@ -1,7 +1,6 @@
 package com.cinema.booking.model;
 
-
-//Reprezentuje całe zamówienie jednego klienta (data rezerwacji, status: PENDING / CONFIRMED, łączna kwota).
+//represents the whole order from client (reservation date, status and total amount)
 
 import jakarta.persistence.*;
 import lombok.*;
@@ -42,5 +41,6 @@ public class Reservation {
     private List<Ticket> tickets = new ArrayList<>();
 
     @Enumerated(EnumType.STRING)
+    @Builder.Default
     private ReservationStatus status = ReservationStatus.PENDING;
 }
