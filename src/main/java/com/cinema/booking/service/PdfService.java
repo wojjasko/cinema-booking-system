@@ -17,69 +17,33 @@ import com.itextpdf.kernel.pdf.PdfWriter;
 import com.itextpdf.layout.Document;
 import com.itextpdf.layout.element.Image;
 import com.itextpdf.layout.element.Paragraph;
+import com.itextpdf.layout.properties.HorizontalAlignment;
 import com.itextpdf.layout.properties.TextAlignment;
 
 import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.time.format.DateTimeFormatter;
 
 @Service
 public class PdfService {
 
+    private static final DateTimeFormatter DATE_TIME_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+    private static final int QR_SIZE_PX = 150;
+
     public byte[] generateTicketPdf(Reservation reservation){
         try(ByteArrayOutputStream baos = new ByteArrayOutputStream()){
 
-            // 1. inicjalizacja dokumentu PDF w pamięci RAM
-            PdfWriter writer = new PdfWriter(baos);
-            PdfDocument pdfDoc = new PdfDocument(writer);
+            // pdf document build in RAM memory
+            PdfDocument pdfDoc = new PdfDocument(new PdfWriter(baos));
             Document document = new Document(pdfDoc);
+            document.setFont(createPolishFont());
 
-            // dla polskich znakow trzeba zmienic czcionke
-            PdfFont font;
-            try {
-                font = PdfFontFactory.createFont("c:/windows/fonts/arial.ttf", PdfEncodings.IDENTITY_H);
-            } catch (Exception e) {
-                font = PdfFontFactory.createFont(StandardFonts.HELVETICA);
-            }
-
-            document.setFont(font);
-
-            // 2. naglowek biletu
-            Paragraph header = new Paragraph("BILET KINOWY")
-                    .setFontSize(22)
-                    .setBold()
-                    .setTextAlignment(TextAlignment.CENTER);
-            document.add(header);
-
-            // 3. szczegoly rezerwacji i seansu
-            document.add(new Paragraph("Numer rezerwacji: #" + reservation.getId()).setBold());
-            document.add(new Paragraph("Film: " + reservation.getScreening().getMovie().getTitle()));
-            document.add(new Paragraph("Sala: " + reservation.getScreening().getCinemaHall().getName()));
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
-            String formattedDate = reservation.getScreening().getStartTime().format(formatter);
-            document.add(new Paragraph("Data i godzina: " + formattedDate));
-            document.add(new Paragraph("E-mail klienta: " + reservation.getCustomerEmail()));
-            document.add(new Paragraph("Cena całkowita: " + reservation.getTotalPrice() + " PLN").setBold());
-
-            document.add(new Paragraph("\nZAREZERWOWANE MIEJSCA: ").setBold());
-
-            // 4. petla po biletach
-            for (Ticket ticket : reservation.getTickets()) {
-                document.add(new Paragraph("- Rząd: " + ticket.getSeat().getRowNumber() + ", Miejsce: " + ticket.getSeat().getSeatNumber()));
-            }
-
-            document.add(new Paragraph("\n"));
-
-            // 5. generowanie kodu QR z ID rezerwacji
-            byte[] qrCodeImage = generateQrCodeImage("RESERVATION-" + reservation.getId(), 150, 150);
-            Image qrImage = new Image(ImageDataFactory.create(qrCodeImage));
-            qrImage.setHorizontalAlignment(com.itextpdf.layout.properties.HorizontalAlignment.CENTER);
-            document.add(qrImage);
-
-            document.add(new Paragraph("Prosimy o okazanie kodu QR przy wejściu na salę.")
-                    .setFontSize(10)
-                    .setTextAlignment(TextAlignment.CENTER));
+            addHeader(document);
+            addReservationDetails(document, reservation);
+            addSeatList(document, reservation);
+            addQrCode(document, reservation);
 
             document.close();
             return baos.toByteArray();
@@ -88,13 +52,55 @@ public class PdfService {
         }
     }
 
-    // metoda generujaca kod QR jako tablice bajtow (obrazek PNG)
-    private byte[] generateQrCodeImage(String text, int width, int height) throws Exception {
-        QRCodeWriter qrCodeWriter = new QRCodeWriter();
-        BitMatrix bitMatrix = qrCodeWriter.encode(text, BarcodeFormat.QR_CODE, width, height);
+    private PdfFont createPolishFont() throws IOException{
+        return PdfFontFactory.createFont(StandardFonts.HELVETICA, PdfEncodings.CP1250);
+    }
 
-        ByteArrayOutputStream pngOutputStream = new ByteArrayOutputStream();
-        MatrixToImageWriter.writeToStream(bitMatrix, "PNG", pngOutputStream);
-        return pngOutputStream.toByteArray();
+    private void addHeader(Document document){
+        document.add(new Paragraph("BILET KINOWY")
+                .setFontSize(22)
+                .setBold()
+                .setTextAlignment(TextAlignment.CENTER));
+    }
+
+    private void addReservationDetails(Document document, Reservation reservation){
+        document.add(new Paragraph("Numer rezerwacji: #" + reservation.getId()).setBold());
+        document.add(new Paragraph("Film: " + reservation.getScreening().getMovie().getTitle()));
+        document.add(new Paragraph("Sala: " + reservation.getScreening().getCinemaHall().getName()));
+        document.add(new Paragraph("Data i godzina: " + reservation.getScreening().getStartTime().format(DATE_TIME_FORMAT)));
+        document.add(new Paragraph("E-mail klienta: " + reservation.getCustomerEmail()));
+        document.add(new Paragraph("Cena całkowita: " + reservation.getTotalPrice() + " PLN").setBold());
+    }
+
+    private void addSeatList(Document document, Reservation reservation){
+        document.add(new Paragraph("ZAREZERWOWANE MIEJSCA: ").setBold().setMarginTop(15));
+
+        for(Ticket ticket : reservation.getTickets()){
+            document.add(new Paragraph("- Rząd: " + ticket.getSeat().getRowNumber()
+            + ", Miejsce: " + ticket.getSeat().getSeatNumber()));
+        }
+    }
+
+    private void addQrCode(Document document, Reservation reservation) throws Exception{
+        byte[] qrCodeImage = generateQrCodeImage("RESERVATION-" + reservation.getId(), QR_SIZE_PX, QR_SIZE_PX);
+
+        Image qrImage = new Image(ImageDataFactory.create(qrCodeImage));
+        qrImage.setHorizontalAlignment(HorizontalAlignment.CENTER);
+        qrImage.setMarginTop(15);
+        document.add(qrImage);
+
+        document.add(new Paragraph("Prosimy o okazanie kodu QR przy wejściu na salę.")
+                .setFontSize(10)
+                .setTextAlignment(TextAlignment.CENTER));
+    }
+
+    // generate QR code as byte array (PNG image)
+    private byte[] generateQrCodeImage(String text, int width, int height) throws Exception {
+        BitMatrix bitMatrix = new QRCodeWriter().encode(text, BarcodeFormat.QR_CODE, width, height);
+
+        try (ByteArrayOutputStream pngOutputStream = new ByteArrayOutputStream()) {
+            MatrixToImageWriter.writeToStream(bitMatrix, "PNG", pngOutputStream);
+            return pngOutputStream.toByteArray();
+        }
     }
 }
