@@ -1,5 +1,6 @@
 package com.cinema.booking.service;
 
+import com.cinema.booking.dto.SeatOccupancyDto;
 import com.cinema.booking.model.*;
 import com.cinema.booking.repository.*;
 import lombok.RequiredArgsConstructor;
@@ -9,7 +10,9 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -22,26 +25,47 @@ public class ReservationService {
     private final SeatRepository seatRepository;
     private final ScreeningService screeningService;
 
-    //pobiera zestaw (set) ID foteli, tkore sa zajete dla danego seansu
+    //returns the set of seats ID, that are taken for specific screening
     public Set<Long> getOccupiedSeatIds(Long screeningId) {
-        //List<Ticket> tickets = ticketRepository.findByReservationScreeningId(screeningId);
-
-        return ticketRepository.findReservedSeatsByScreeningId(screeningId)
-                .stream()
-                .map(Seat::getId)
-                .collect(Collectors.toSet());
+        return new HashSet<>(ticketRepository.findOccupiedSeatIdsByScreeningId(screeningId));
     }
 
-    //tworzenie nowej rezerwacji w bazie danych
+    //map: seat ID -> reservation data (used in hall view in admin panel)
+    @Transactional(readOnly = true)
+    public Map<Long, SeatOccupancyDto> getSeatOccupancyBySeatId(Long screeningId) {
+        return ticketRepository.findByReservationScreeningId(screeningId).stream()
+                .collect(Collectors.toMap(
+                        ticket -> ticket.getSeat().getId(),
+                        ticket -> new SeatOccupancyDto(
+                                ticket.getId(),
+                                ticket.getReservation().getCustomerEmail(),
+                                ticket.getReservation().getReservationTime()),
+                        (first, second) -> first
+                ));
+    }
+
+    //creating a new reservation in database
     @Transactional
     public Reservation createReservation(Long screeningId, List<Long> seatIds, String customerEmail) {
-        //1. pobieranie seansu z bazy
+        //1. getting screening from the database
         Screening screening = screeningService.getScreeningById(screeningId);
 
-        //2. pobieranie fotelow z bazy
-        List<Seat> selectedSeats = seatRepository.findAllById(seatIds);
+        //2. getting seats from the database and checking if they all exist and belongs to the hall
+        Set<Long> requestedSeatIds = new HashSet<>(seatIds);
+        List<Seat> selectedSeats = seatRepository.findAllById(requestedSeatIds);
 
-        //3. sprawdzanie czy ktorys fotel nie zostal juz wybrany
+        if (selectedSeats.size() != requestedSeatIds.size()) {
+            throw new IllegalArgumentException("Wybrano nieistniejące miejsce.");
+        }
+
+        Long hallId = screening.getCinemaHall().getId();
+        for (Seat seat : selectedSeats) {
+            if (!seat.getCinemaHall().getId().equals(hallId)) {
+                throw new IllegalArgumentException("Wybrane miejsce nie należy do sali tego seansu.");
+            }
+        }
+
+        //3. checking if some seat was not already taken
         Set<Long> occupiedSeatIds = getOccupiedSeatIds(screeningId);
         for (Seat seat : selectedSeats) {
             if (occupiedSeatIds.contains(seat.getId())) {
@@ -49,10 +73,10 @@ public class ReservationService {
             }
         }
 
-        //4. obliczanie lacznej ceny (liczba biletow * cena biletu za seans)
+        //4. counting the total price (amount of tickets * ticket price)
         BigDecimal totalPrice = screening.getPrice().multiply(BigDecimal.valueOf(selectedSeats.size()));
 
-        //5. tworzenie nowego obiektu rezerwacji (ze statusem PENDING)
+        //5. creating the new reservation object (with PENDING status)
         Reservation reservation = Reservation.builder()
                 .screening(screening)
                 .customerEmail(customerEmail)
@@ -62,18 +86,21 @@ public class ReservationService {
                 .tickets(new ArrayList<>())
                 .build();
 
-        //6. tworzenie biletow dla wybranych miejsc
+        //6. creating tickets for chosen seats
         for (Seat seat : selectedSeats) {
-            Ticket ticket = Ticket.builder()
+            reservation.getTickets().add(Ticket.builder()
                     .reservation(reservation)
                     .seat(seat)
-                    .build();
-
-            reservation.getTickets().add(ticket);
+                    .build());
         }
 
-        //7. zapisujemy rezerwacje (dzieki cascade type all zapisza sie tez bilety)
+        //7. saving the reservation (thanks to the CASCADE type all - the tickets will be saved too)
         return reservationRepository.save(reservation);
+    }
+
+    public Reservation getReservationById(Long reservationId) {
+        return reservationRepository.findById(reservationId)
+                .orElseThrow(() -> new IllegalArgumentException("Nie znaleziono rezerwacji o id: " + reservationId));
     }
 
     public List<Reservation> getUserReservations(String customerEmail){
@@ -86,10 +113,10 @@ public class ReservationService {
                 .orElseThrow(() -> new IllegalArgumentException("Bilet nie istnieje"));
         Reservation reservation = ticket.getReservation();
 
+        // orphanRemoval = true - will remove the ticket from the database after removing him from reservation collection
         reservation.getTickets().remove(ticket);
-        ticketRepository.delete(ticket);
 
-        // jesli rezerwacja nie ma juz zadnych biletow, to ja usuwamy
+        // if the reservation has no tickets - we remove it
         if (reservation.getTickets().isEmpty()) {
             reservationRepository.delete(reservation);
         }
@@ -97,13 +124,9 @@ public class ReservationService {
 
     @Transactional
     public void cancelAllUserTicketsForScreening(Long screeningId, String customerEmail) {
-        List<Reservation> userReservations = reservationRepository.findByCustomerEmailOrderByIdDesc(customerEmail);
-        for (Reservation res : userReservations) {
-            if (res.getScreening().getId().equals(screeningId)) {
-                ticketRepository.deleteAll(res.getTickets());
-                reservationRepository.delete(res);
-            }
-        }
+        // cascade = ALL on Reservation.tickets also removes the tickets
+        reservationRepository.deleteAll(
+                reservationRepository.findByCustomerEmailAndScreeningId(customerEmail, screeningId));
     }
 
     @Transactional
@@ -112,8 +135,12 @@ public class ReservationService {
             return false;
         }
 
-        Reservation reservation = reservationRepository.findById(reservationId)
-                .orElseThrow(() -> new IllegalArgumentException("Nie znaleziono rezerwacji"));
+        Reservation reservation = getReservationById(reservationId);
+
+        // we can only pay for reservation with PENDING status
+        if (reservation.getStatus() != ReservationStatus.PENDING) {
+            throw new IllegalStateException("Ta rezerwacja nie oczekuje już na płatność.");
+        }
 
         reservation.setStatus(ReservationStatus.PAID);
         reservationRepository.save(reservation);

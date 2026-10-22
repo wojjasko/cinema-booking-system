@@ -17,29 +17,33 @@ import java.util.List;
 @Slf4j
 public class ReservationCleanupScheduler {
 
+    private static final long PAYMENT_TIMEOUT_MINUTES = 2;
+
+    private static final long CHECK_INTERVAL_MS = 30_000;
+
     private final ReservationRepository reservationRepository;
 
-    // minuta
-    @Scheduled(fixedRate = 30000)
+    @Scheduled(fixedRate = CHECK_INTERVAL_MS)
     @Transactional
     public void cancelExpiredReservations(){
-        //po 5 minutach
-        LocalDateTime cutoffTime = LocalDateTime.now().minusMinutes(1);
+        LocalDateTime cutoffTime = LocalDateTime.now().minusMinutes(PAYMENT_TIMEOUT_MINUTES);
 
         List<Reservation> expiredReservations = reservationRepository
                 .findByStatusAndReservationTimeBefore(ReservationStatus.PENDING, cutoffTime);
 
-        if (!expiredReservations.isEmpty()) {
-            for (Reservation reservation : expiredReservations) {
-                reservation.setStatus(ReservationStatus.CANCELLED);
-
-                reservation.getTickets().clear();
-
-                log.info("Anulowano przeterminowaną rezerwację ID: {}. Fotele zostały zwolnione.", reservation.getId());
-            }
-
-            reservationRepository.saveAllAndFlush(expiredReservations);
+        if (expiredReservations.isEmpty()) {
+            return;
         }
+
+        for (Reservation reservation : expiredReservations) {
+            reservation.setStatus(ReservationStatus.CANCELLED);
+            // orphanRemoval removes tickets from database - the seats are free again thanks to that
+            reservation.getTickets().clear();
+
+            log.info("Anulowano przeterminowaną rezerwację ID: {}. Fotele zostały zwolnione.", reservation.getId());
+        }
+
+        reservationRepository.saveAllAndFlush(expiredReservations);
 
     }
 
