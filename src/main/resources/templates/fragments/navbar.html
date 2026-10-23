@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<body>
+
+<div class="navbar" th:fragment="navbar">
+    <a href="/" class="navbar-brand">🎬 MojeKino</a>
+
+    <div class="nav-links">
+        <th:block sec:authorize="!isAuthenticated()">
+            <a href="/login" class="nav-btn">Zaloguj się</a>
+            <a href="/register" class="nav-btn nav-btn-success">Rejestracja</a>
+        </th:block>
+
+        <th:block sec:authorize="isAuthenticated()">
+            <span class="user-greeting">
+                Zalogowany jako: <strong sec:authentication="name">user@kino.pl</strong>
+            </span>
+
+            <a href="/" class="nav-btn">Strona główna</a>
+            <a href="/my-reservations" class="nav-btn">Moje bilety</a>
+            <a href="/profile" class="nav-btn nav-btn-primary">Moje konto</a>
+
+            <a sec:authorize="hasRole('ADMIN')" href="/admin" class="nav-btn btn-admin">⚙️ Panel admina</a>
+
+            <form th:action="@{/logout}" method="post" style="margin: 0;">
+                <button type="submit" class="nav-btn btn-logout">Wyloguj</button>
+            </form>
+        </th:block>
+    </div>
+</div>
+
+</body>
+</html>
