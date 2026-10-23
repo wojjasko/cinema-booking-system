@@ -3,94 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <title>Moje Konto - MojeKino</title>
+    <link rel="stylesheet" th:href="@{/css/navbar.css}">
     <style>
         body { font-family: 'Segoe UI', sans-serif; background: #0f0c20; color: #e0e0e0; margin: 0; padding-bottom: 50px; }
-        .navbar {
-            background-color: rgba(20, 16, 38, 0.9);
-            padding: 15px 40px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-            margin-bottom: 40px;
-            backdrop-filter: blur(10px);
-        }
-
-        .navbar-brand {
-            font-size: 26px;
-            font-weight: bold;
-            color: #ffc107;
-            text-decoration: none;
-            letter-spacing: 1px;
-        }
-
-        .nav-links {
-            display: flex;
-            gap: 15px;
-            align-items: center;
-        }
-
-        .user-greeting {
-            color: #aaa;
-            font-size: 14px;
-            margin-right: 5px;
-        }
-
-        .user-greeting strong {
-            color: #fff;
-        }
-
-        .nav-btn {
-            color: white;
-            text-decoration: none;
-            padding: 8px 16px;
-            border-radius: 6px;
-            font-weight: 600;
-            font-size: 14px;
-            background-color: rgba(255, 255, 255, 0.1);
-            border: none;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            display: inline-flex;
-            align-items: center;
-        }
-
-        .nav-btn:hover {
-            background-color: rgba(255, 255, 255, 0.25);
-        }
-
-        .nav-btn-primary {
-            background-color: #007bff;
-        }
-
-        .nav-btn-primary:hover {
-            background-color: #0056b3;
-        }
-
-        .nav-btn-success {
-            background-color: #28a745;
-        }
-
-        .nav-btn-success:hover {
-            background-color: #218838;
-        }
-
-        .btn-admin {
-            background-color: #ffc107;
-            color: #1a1a1a;
-        }
-
-        .btn-admin:hover {
-            background-color: #e0a800;
-        }
-
-        .btn-logout {
-            background-color: #dc3545;
-        }
-
-        .btn-logout:hover {
-            background-color: #bd2130;
-        }
         .container { max-width: 800px; margin: 40px auto; padding: 0 20px; }
 
         .tab-menu { display: flex; gap: 15px; border-bottom: 2px solid rgba(255,255,255,0.1); margin-bottom: 30px; }
@@ -114,36 +29,7 @@
 </head>
 <body>
 
-<div class="navbar">
-    <a href="/" class="navbar-brand">🎬 MojeKino</a>
-
-    <div class="nav-links">
-        <!-- Niezalogowany uzytkownik -->
-        <th:block sec:authorize="!isAuthenticated()">
-            <a href="/login" class="nav-btn">Zaloguj się</a>
-            <a href="/register" class="nav-btn nav-btn-success">Rejestracja</a>
-        </th:block>
-
-        <!-- Zalogowany uzytkownik -->
-        <th:block sec:authorize="isAuthenticated()">
-            <span class="user-greeting">
-                Zalogowany jako: <strong sec:authentication="name">user@kino.pl</strong>
-            </span>
-
-            <a href="/" class="nav-btn">Strona główna</a>
-            <a href="/my-reservations" class="nav-btn">Moje bilety</a>
-            <a href="/profile" class="nav-btn nav-btn-primary">Moje konto</a>
-
-            <!-- Panel administratora -->
-            <a sec:authorize="hasRole('ADMIN')" href="/admin" class="nav-btn btn-admin">⚙️ Panel admina</a>
-
-            <!-- Przycisk wylogowania -->
-            <form th:action="@{/logout}" method="post" style="margin: 0;">
-                <button type="submit" class="nav-btn btn-logout">Wyloguj</button>
-            </form>
-        </th:block>
-    </div>
-</div>
+<div th:replace="~{fragments/navbar :: navbar}"></div>
 
 <div class="container">
     <div th:if="${successMessage}" class="alert alert-success" th:text="${successMessage}"></div>
@@ -155,7 +41,7 @@
         <button class="tab-btn" onclick="window.location.href='/my-reservations'">🎟️ Moje rezerwacje</button>
     </div>
 
-    <!-- 1. DANE OSOBOWE -->
+    <!-- 1. PERSONAL DATA -->
     <div id="details-tab" class="card">
         <h2 style="margin-top: 0;">Dane Osobowe</h2>
         <form th:action="@{/profile/update-details}" th:object="${profileDto}" method="post">
@@ -180,7 +66,7 @@
         </form>
     </div>
 
-    <!-- 2. ZMIANA HASŁA -->
+    <!-- 2. PASSWORD CHANGE -->
     <div id="security-tab" class="card" style="display: none;">
         <h2 style="margin-top: 0;">Zmiana hasła</h2>
         <form th:action="@{/profile/change-password}" th:object="${passwordDto}" method="post">
