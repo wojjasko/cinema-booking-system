@@ -24,15 +24,15 @@ public class UserService {
     }
 
     public User registerNewUser(String email, String rawPassword, String firstName, String lastName, String phoneNumber){
-        //sprawdzenie czy email jest zajety przez innego uzytkownika
+        //checking if the email is already taken by other user
         if(userRepository.existsByEmail(email)){
             throw new RuntimeException("Konto o podanym adresie e-mail już istnieje!");
         }
 
-        //szyfrujemy surowe haslo wpisane w formularzu za pomoca BCrypt
+        ///encrypying the password from the form with BCrypt
         String encodedPassword = passwordEncoder.encode(rawPassword);
 
-        //budujemy nowy obiekt uzytkownika z rola ROLE_USER
+        //build new user object with ROLE_USER
         User user = User.builder()
                 .email(email)
                 .password(encodedPassword)
@@ -42,7 +42,7 @@ public class UserService {
                 .role(Role.ROLE_USER)
                 .build();
 
-        //zapisujemy uzytkownika w bazie danych
+        //saving new user in the database
         return userRepository.save(user);
     }
 
