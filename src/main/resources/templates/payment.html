@@ -175,7 +175,7 @@
         🎬 <strong>Film:</strong> <span th:text="${reservation.screening.movie.title}">Tytuł</span><br>
         🏛️ <strong>Sala:</strong> <span th:text="${reservation.screening.cinemaHall.name}">Sala 1</span><br>
         🎟️ <strong>Liczba Biletów:</strong> <span th:text="${#lists.size(reservation.tickets)}">2</span><br>
-        💰 <strong>Do zapłaty:</strong> <strong style="color: #ffc107; font-size: 16px;" th:text="${totalAmount} + ' PLN'">50.00 PLN</strong>
+        💰 <strong>Do zapłaty:</strong> <strong style="color: #ffc107; font-size: 16px;" th:text="${reservation.totalPrice} + ' PLN'">50.00 PLN</strong>
     </div>
 
     <div th:if="${errorMessage}" class="alert-error" th:text="${errorMessage}">
