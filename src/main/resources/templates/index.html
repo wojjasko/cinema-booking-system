@@ -4,6 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <title>Repertuar Kina - MojeKino</title>
+    <link rel="stylesheet" th:href="@{/css/navbar.css}">
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -12,93 +13,6 @@
             color: #e0e0e0;
             min-height: 100vh;
             padding-bottom: 50px;
-        }
-
-        .navbar {
-            background-color: rgba(20, 16, 38, 0.9);
-            padding: 15px 40px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-            margin-bottom: 40px;
-            backdrop-filter: blur(10px);
-        }
-
-        .navbar-brand {
-            font-size: 26px;
-            font-weight: bold;
-            color: #ffc107;
-            text-decoration: none;
-            letter-spacing: 1px;
-        }
-
-        .nav-links {
-            display: flex;
-            gap: 15px;
-            align-items: center;
-        }
-
-        .user-greeting {
-            color: #aaa;
-            font-size: 14px;
-            margin-right: 5px;
-        }
-
-        .user-greeting strong {
-            color: #fff;
-        }
-
-        .nav-btn {
-            color: white;
-            text-decoration: none;
-            padding: 8px 16px;
-            border-radius: 6px;
-            font-weight: 600;
-            font-size: 14px;
-            background-color: rgba(255, 255, 255, 0.1);
-            border: none;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            display: inline-flex;
-            align-items: center;
-        }
-
-        .nav-btn:hover {
-            background-color: rgba(255, 255, 255, 0.25);
-        }
-
-        .nav-btn-primary {
-            background-color: #007bff;
-        }
-
-        .nav-btn-primary:hover {
-            background-color: #0056b3;
-        }
-
-        .nav-btn-success {
-            background-color: #28a745;
-        }
-
-        .nav-btn-success:hover {
-            background-color: #218838;
-        }
-
-        .btn-admin {
-            background-color: #ffc107;
-            color: #1a1a1a;
-        }
-
-        .btn-admin:hover {
-            background-color: #e0a800;
-        }
-
-        .btn-logout {
-            background-color: #dc3545;
-        }
-
-        .btn-logout:hover {
-            background-color: #bd2130;
         }
 
         .content-container {
@@ -248,37 +162,7 @@
 </head>
 <body>
 
-<!-- PASEK NAWIGACJI -->
-<div class="navbar">
-    <a href="/" class="navbar-brand">🎬 MojeKino</a>
-
-    <div class="nav-links">
-        <!-- Niezalogowany uzytkownik -->
-        <th:block sec:authorize="!isAuthenticated()">
-            <a href="/login" class="nav-btn">Zaloguj się</a>
-            <a href="/register" class="nav-btn nav-btn-success">Rejestracja</a>
-        </th:block>
-
-        <!-- Zalogowany uzytkownik -->
-        <th:block sec:authorize="isAuthenticated()">
-            <span class="user-greeting">
-                Zalogowany jako: <strong sec:authentication="name">user@kino.pl</strong>
-            </span>
-
-            <a href="/" class="nav-btn">Strona główna</a>
-            <a href="/my-reservations" class="nav-btn">Moje bilety</a>
-            <a href="/profile" class="nav-btn nav-btn-primary">Moje konto</a>
-
-            <!-- Panel administratora -->
-            <a sec:authorize="hasRole('ADMIN')" href="/admin" class="nav-btn btn-admin">⚙️ Panel admina</a>
-
-            <!-- Przycisk wylogowania -->
-            <form th:action="@{/logout}" method="post" style="margin: 0;">
-                <button type="submit" class="nav-btn btn-logout">Wyloguj</button>
-            </form>
-        </th:block>
-    </div>
-</div>
+<div th:replace="~{fragments/navbar :: navbar}"></div>
 
 <!-- MAIN PAGE -->
 <div class="content-container">
@@ -286,13 +170,13 @@
 
     <div class="filter-section">
 
-        <!-- 1. Wyszukiwarka filmu po tytule -->
+        <!-- 1. Movie searcher (after title) -->
         <div style="flex: 1; min-width: 220px;">
             <input type="text" id="searchInput" placeholder="Wpisz tytuł szukanego filmu"
                    style="width: 100%; padding: 11px 15px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.5); color: white; box-sizing: border-box; outline: none;">
         </div>
 
-        <!-- 2. Filtrowanie po gatunku -->
+        <!-- 2. Movie filter by genre -->
         <div style="min-width: 150px;">
             <select id="genreSelect" style="width: 100%; padding: 11px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.6); color: white; cursor: pointer; outline: none;">
                 <option value="">Wszystkie gatunki</option>
@@ -302,7 +186,7 @@
             </select>
         </div>
 
-        <!-- 3. Przyciski dat seansu -->
+        <!-- 3. Buttons of screening dates -->
         <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
             <a th:href="@{/}"
                th:classappend="${selectedDate == null} ? 'active-filter' : ''"
@@ -316,7 +200,7 @@
                th:classappend="${selectedDate == tomorrow} ? 'active-filter' : ''"
                class="filter-btn">Jutro</a>
 
-            <!-- Okno kalendarza daty -->
+            <!-- data calendar window -->
             <form th:action="@{/}" method="get" style="display: inline-flex; align-items: center; margin: 0;">
                 <input type="date" name="date" th:value="${selectedDate}" onchange="this.form.submit()"
                        style="padding: 9px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.5); color: white; cursor: pointer; color-scheme: dark;">
@@ -324,9 +208,7 @@
         </div>
     </div>
 
-    <div th:each="entry : ${screeningsByMovie}"
-         th:if="${entry.value != null and !#lists.isEmpty(entry.value)}"
-         class="movie-card">
+    <div th:each="entry : ${screeningsByMovie}" class="movie-card">
 
         <div class="poster-container">
             <img th:src="${entry.key.posterUrl != null and !#strings.isEmpty(entry.key.posterUrl)} ? ${entry.key.posterUrl} : 'https://via.placeholder.com/150x220?text=Brak+Ok%C5%82adki'"
@@ -349,47 +231,29 @@
                 <p class="description" th:text="${entry.key.description}">Opis filmu...</p>
             </div>
 
+            <!-- screenings as hour buttons -->
             <div class="screenings-section">
                 <div class="screenings-title">Dostępne Seanse:</div>
                 <div class="time-buttons">
                     <a th:each="screening : ${entry.value}"
                        th:href="@{/screenings/{id}(id=${screening.id})}"
                        class="btn-time">
-                        <span class="time-label"
-                              th:text="${selectedDate != null} ? ${#temporals.format(screening.startTime, 'HH:mm')} : ${#temporals.format(screening.startTime, 'dd.MM - HH:mm')}">18:00</span>
+                        <span class="time-label" th:text="${#temporals.format(screening.startTime, 'dd.MM - HH:mm')}">18:00</span>
                         <span class="hall-label" th:text="${screening.cinemaHall.name}">Sala 1</span>
                     </a>
                 </div>
             </div>
+
         </div>
 
     </div>
-
-    <!-- PASEK PAGINACJI -->
-    <div class="pagination-container" th:if="${totalPages > 1}"
-         style="display: flex; justify-content: center; align-items: center; gap: 10px; margin-top: 40px; margin-bottom: 20px;">
-
-        <a th:if="${currentPage > 0}"
-           th:href="@{/(page=${currentPage - 1}, date=${selectedDate})}"
-           class="nav-btn" style="text-decoration: none;">&laquo; Poprzednia</a>
-
-        <span th:each="i : ${#numbers.sequence(0, totalPages - 1)}">
-            <a th:href="@{/(page=${i}, date=${selectedDate})}"
-               th:text="${i + 1}"
-               class="nav-btn"
-               th:style="${i == currentPage} ? 'background-color: #ffc107; color: #111; font-weight: bold;' : ''"
-               style="text-decoration: none; padding: 8px 14px;">1</a>
-        </span>
-
-        <a th:if="${currentPage < totalPages - 1}"
-           th:href="@{/(page=${currentPage + 1}, date=${selectedDate})}"
-           class="nav-btn" style="text-decoration: none;">Następna &raquo;</a>
-    </div>
+</div>
 
 </div>
 
 </body>
 <script>
+    //filtering movies in real-time (after title and genre)
     function filterMovies() {
         const titleQuery = document.getElementById('searchInput').value.toLowerCase().trim();
         const selectedGenre = document.getElementById('genreSelect').value.toLowerCase().trim();
