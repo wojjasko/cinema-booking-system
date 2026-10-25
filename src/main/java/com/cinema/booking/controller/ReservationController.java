@@ -22,22 +22,19 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ReservationController {
 
-    private static final String GUEST_EMAIL = "guest@kino.pl";
-
     private final ReservationService reservationService;
     private final PdfService pdfService;
 
     // 1. form handling with chosen seats under /reserve
     @PostMapping("/reserve")
     public String createReservation(@RequestParam Long screeningId,
-                                     @RequestParam(name = "seatIds", required = false) List<Long> seatIds,
-                                     Principal principal){
+                                    @RequestParam(name = "seatIds", required = false) List<Long> seatIds,
+                                    Principal principal){
         if (seatIds == null || seatIds.isEmpty()){
             return "redirect:/screenings/" + screeningId + "?error=no_seats";
         }
 
-        String userEmail = principal != null ? principal.getName() : GUEST_EMAIL;
-        Reservation reservation = reservationService.createReservation(screeningId, seatIds, userEmail);
+        Reservation reservation = reservationService.createReservation(screeningId, seatIds, principal.getName());
 
         //redirect to BLIK's payment page
         return "redirect:/payment/" + reservation.getId();
@@ -45,8 +42,9 @@ public class ReservationController {
 
     // 2. BLIK form view
     @GetMapping("/payment/{id}")
-    public String showPaymentPage(@PathVariable Long id, Model model){
-        Reservation reservation = reservationService.getReservationById(id);
+    public String showPaymentPage(@PathVariable Long id, Model model, Principal principal){
+        //only the owner of the reservation can see its payment page
+        Reservation reservation = reservationService.getReservationForUser(id, principal.getName());
 
         //if the payment is paid or cancelled - we head back to the list
         if (reservation.getStatus() != ReservationStatus.PENDING){
@@ -61,11 +59,12 @@ public class ReservationController {
     @PostMapping("/payment/{id}/pay")
     public String processPayment(@PathVariable Long id,
                                  @RequestParam String blikCode,
-                                 Model model) {
-        boolean success = reservationService.processBlikPayment(id, blikCode);
+                                 Model model,
+                                 Principal principal) {
+        boolean success = reservationService.processBlikPayment(id, blikCode, principal.getName());
 
         if (!success) {
-            model.addAttribute("reservation", reservationService.getReservationById(id));
+            model.addAttribute("reservation", reservationService.getReservationForUser(id, principal.getName()));
             model.addAttribute("errorMessage", "Nieprawidłowy kod BLIK! Wpisz dokładnie 6 cyfr.");
             return "payment";
         }
@@ -75,8 +74,9 @@ public class ReservationController {
 
     // 4. downloading tickets in PDF format
     @GetMapping("/reservations/{id}/pdf")
-    public ResponseEntity<byte[]> downloadTicketPdf(@PathVariable Long id){
-        Reservation reservation = reservationService.getReservationById(id);
+    public ResponseEntity<byte[]> downloadTicketPdf(@PathVariable Long id, Principal principal){
+        //only the owner of the reservation can download its ticket
+        Reservation reservation = reservationService.getReservationForUser(id, principal.getName());
 
         //additional security for downloading unpaid reservation
         if(reservation.getStatus() != ReservationStatus.PAID){
@@ -100,9 +100,6 @@ public class ReservationController {
     // 5. reservation view for logged user
     @GetMapping("/my-reservations")
     public String showMyReservations(Model model, Principal principal) {
-        if (principal == null) {
-            return "redirect:/login";
-        }
         model.addAttribute("reservations", reservationService.getUserReservations(principal.getName()));
         return "my-reservations";
     }

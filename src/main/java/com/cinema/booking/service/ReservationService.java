@@ -4,6 +4,7 @@ import com.cinema.booking.dto.SeatOccupancyDto;
 import com.cinema.booking.model.*;
 import com.cinema.booking.repository.*;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -47,8 +48,9 @@ public class ReservationService {
     //creating a new reservation in database
     @Transactional
     public Reservation createReservation(Long screeningId, List<Long> seatIds, String customerEmail) {
-        //1. getting screening from the database
-        Screening screening = screeningService.getScreeningById(screeningId);
+        //1. getting screening from the database and locking its row until the end of the transaction,
+        //so two simultaneous reservations for the same screening cannot take the same seat
+        Screening screening = screeningService.getScreeningByIdForUpdate(screeningId);
 
         //2. getting seats from the database and checking if they all exist and belongs to the hall
         Set<Long> requestedSeatIds = new HashSet<>(seatIds);
@@ -103,6 +105,16 @@ public class ReservationService {
                 .orElseThrow(() -> new IllegalArgumentException("Nie znaleziono rezerwacji o id: " + reservationId));
     }
 
+    //returns the reservation only if it belongs to the given user - otherwise throws AccessDeniedException (HTTP 403)
+    public Reservation getReservationForUser(Long reservationId, String customerEmail) {
+        Reservation reservation = getReservationById(reservationId);
+
+        if (!reservation.getCustomerEmail().equalsIgnoreCase(customerEmail)) {
+            throw new AccessDeniedException("Ta rezerwacja należy do innego użytkownika.");
+        }
+        return reservation;
+    }
+
     public List<Reservation> getUserReservations(String customerEmail){
         return reservationRepository.findByCustomerEmailOrderByIdDesc(customerEmail);
     }
@@ -130,12 +142,13 @@ public class ReservationService {
     }
 
     @Transactional
-    public boolean processBlikPayment(Long reservationId, String blikCode){
+    public boolean processBlikPayment(Long reservationId, String blikCode, String customerEmail){
+        //ownership is checked first, so a stranger learns nothing about the reservation
+        Reservation reservation = getReservationForUser(reservationId, customerEmail);
+
         if (blikCode == null || !blikCode.matches("\\d{6}")){
             return false;
         }
-
-        Reservation reservation = getReservationById(reservationId);
 
         // we can only pay for reservation with PENDING status
         if (reservation.getStatus() != ReservationStatus.PENDING) {

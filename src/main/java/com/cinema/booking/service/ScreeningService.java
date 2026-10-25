@@ -25,6 +25,12 @@ public class ScreeningService {
                 .orElseThrow(() -> new RuntimeException("Nie znaleziono seansu o id: " + id));
     }
 
+    //the same as above, but with block for screening's row - for use only in transactions (seat reservtation)
+    public Screening getScreeningByIdForUpdate(Long id){
+        return screeningRepository.findByIdForUpdate(id)
+                .orElseThrow(() -> new RuntimeException("Nie znaleziono seansu o id: " + id));
+    }
+
     public List<Screening> getUpcomingScreenings(){
         return screeningRepository.findByStartTimeAfterOrderByStartTimeAsc(LocalDateTime.now());
     }
