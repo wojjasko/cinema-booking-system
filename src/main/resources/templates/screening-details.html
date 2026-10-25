@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
     <meta charset="UTF-8">
     <title th:text="${screening.movie.title} + ' - Wybór Miejsc'">Wybór Miejsc</title>
@@ -82,7 +83,12 @@
         </div>
 
         <div id="hiddenSeatsContainer"></div>
-        <button type="submit" class="btn-submit">Zarezerwuj</button>
+
+        <button sec:authorize="isAuthenticated()" type="submit" class="btn-submit">Zarezerwuj</button>
+        <p sec:authorize="!isAuthenticated()" style="text-align: center; color: #a0a0c0;">
+            Aby zarezerwować miejsca, <a href="/login" style="color: #ffc107;">zaloguj się</a>
+            lub <a href="/register" style="color: #ffc107;">załóż konto</a>.
+        </p>
     </form>
 </div>
 
