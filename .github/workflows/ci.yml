@@ -1,0 +1,42 @@
+# Auto builds and test made with each push and pull request
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    # Real PostgreSQL for test, which run the whole Spring context (BookingApplicationTests)
+    # Data matches the defaults in application.properties (cinemadb/postgres/1708)
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_DB: cinemadb
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: "1708"
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d cinemadb"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    steps:
+      - name: Get the code
+        uses: actions/checkout@v4
+
+      - name: Install JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven   # remembers maven dependencies between launches
+
+      - name: Build and test
+        run: mvn -B verify
