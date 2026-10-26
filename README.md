@@ -7,7 +7,7 @@ A Full-stack web application for online cinema ticket booking, interactive seat 
 ## Key Features
 
 ### Ticket Booking & Public Area
-* **Movie Screening Aggregation:** Displaying a single tile per movie featuring a poster, duration, genre, along with date and time buttons.
+* **Movie Screening Aggregation:** Single movie card view presenting title, genre, duration, and poster with interactive date and time screening selectors.
 * **Interactive Seat Selection:** A visual cinema hall layout with real-time marking of available and occupied seats.
 * **My Reservations:** A client panel listing booked tickets with an option to download confirmation in PDF format.
 * **Strict Concurrency Control:** Anti-double-booking protection preventing simultaneous users from reserving the exact same seat on a screening.
