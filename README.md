@@ -14,7 +14,7 @@ A Full-stack web application for online cinema ticket booking, interactive seat 
 
 ### Admin Panel & Hall Management
 - **Repertoire Management (CRUD):** Adding and deleting movies, managing cinema halls, and scheduling new screenings.
-- **Overlap Prevention Algorithm:** SQL-based validation ensuring a screening hall is not double-booked during a specific time slot (factoring in movie runtime).
+- **Overlap Prevention Algorithm:** Database-validated scheduling logic ensuring screening halls are never double-booked within overlapping time slots (factoring in movie runtime).
 - **Admin Hall Preview:** Visual overview of occupied seats featuring CSS Tooltips with client data (email, reservation date/time, transaction ID).
 - **Flexible Cancellation:** Administrative ability to cancel individual tickets or entire user bookings for specific screenings with JPA cascading cleanup (`orphanRemoval`).
 
