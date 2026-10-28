@@ -76,7 +76,21 @@
             display: inline-block;
         }
 
-
+        .alert {
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .alert-success {
+            background-color: rgba(40, 167, 69, 0.25);
+            border: 1px solid #28a745;
+            color: #7be495;
+        }
+        .alert-error {
+            background-color: rgba(220, 53, 69, 0.25);
+            border: 1px solid #ff4d4d;
+            color: #ff8080;
+        }
     </style>
 </head>
 <body>
@@ -85,6 +99,13 @@
 
 <div class="container">
     <h1>Moje Rezerwacje</h1>
+
+    <div th:if="${param.paid}" class="alert alert-success">
+        Płatność przebiegła pomyślnie. Możesz pobrać swój bilet.
+    </div>
+    <div th:if="${param.paymentFailed}" class="alert alert-error">
+        Czas na płatność minął lub rezerwacja została anulowana. Zarezerwuj miejsca ponownie.
+    </div>
 
     <div th:if="${#lists.isEmpty(reservations)}" class="no-reservations">
         Nie masz jeszcze żadnych aktywnych rezerwacji.
