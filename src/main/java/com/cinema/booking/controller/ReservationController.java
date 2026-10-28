@@ -29,8 +29,8 @@ public class ReservationController {
     @PostMapping("/reserve")
     public String createReservation(@RequestParam Long screeningId,
                                     @RequestParam(name = "seatIds", required = false) List<Long> seatIds,
-                                    Principal principal){
-        if (seatIds == null || seatIds.isEmpty()){
+                                    Principal principal) {
+        if (seatIds == null || seatIds.isEmpty()) {
             return "redirect:/screenings/" + screeningId + "?error=no_seats";
         }
 
@@ -42,12 +42,12 @@ public class ReservationController {
 
     // 2. BLIK form view
     @GetMapping("/payment/{id}")
-    public String showPaymentPage(@PathVariable Long id, Model model, Principal principal){
+    public String showPaymentPage(@PathVariable Long id, Model model, Principal principal) {
         //only the owner of the reservation can see its payment page
         Reservation reservation = reservationService.getReservationForUser(id, principal.getName());
 
         //if the payment is paid or cancelled - we head back to the list
-        if (reservation.getStatus() != ReservationStatus.PENDING){
+        if (reservation.getStatus() != ReservationStatus.PENDING) {
             return "redirect:/my-reservations";
         }
 
@@ -61,7 +61,13 @@ public class ReservationController {
                                  @RequestParam String blikCode,
                                  Model model,
                                  Principal principal) {
-        boolean success = reservationService.processBlikPayment(id, blikCode, principal.getName());
+        boolean success;
+        try {
+            success = reservationService.processBlikPayment(id, blikCode, principal.getName());
+        } catch (IllegalStateException e) {
+            //reservation is no longer waiting for payment (expired / cancelled / changed in the meantime)
+            return "redirect:/my-reservations?paymentFailed=true";
+        }
 
         if (!success) {
             model.addAttribute("reservation", reservationService.getReservationForUser(id, principal.getName()));
@@ -74,12 +80,12 @@ public class ReservationController {
 
     // 4. downloading tickets in PDF format
     @GetMapping("/reservations/{id}/pdf")
-    public ResponseEntity<byte[]> downloadTicketPdf(@PathVariable Long id, Principal principal){
+    public ResponseEntity<byte[]> downloadTicketPdf(@PathVariable Long id, Principal principal) {
         //only the owner of the reservation can download its ticket
         Reservation reservation = reservationService.getReservationForUser(id, principal.getName());
 
         //additional security for downloading unpaid reservation
-        if(reservation.getStatus() != ReservationStatus.PAID){
+        if (reservation.getStatus() != ReservationStatus.PAID) {
             throw new IllegalStateException("Nie można pobrać biletu dla nieopłaconej rezerwacji");
         }
 

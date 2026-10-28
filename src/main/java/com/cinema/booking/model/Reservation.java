@@ -43,4 +43,12 @@ public class Reservation {
     @Enumerated(EnumType.STRING)
     @Builder.Default
     private ReservationStatus status = ReservationStatus.PENDING;
+
+    //row version - protects against two simultaneous changes of the same reservation
+    //for examplle: the user pays exactly when the scheduler cancels it). The second change fails with
+    //ObjectOptimisticLockingFailureException instead of silently overwriting the first one.
+    //"default 0" fills the new column in reservations that already exist in the database.
+    @Version
+    @Column(nullable = false, columnDefinition = "bigint not null default 0")
+    private Long version;
 }
