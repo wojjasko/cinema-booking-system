@@ -4,6 +4,7 @@ import com.cinema.booking.dto.SeatOccupancyDto;
 import com.cinema.booking.model.*;
 import com.cinema.booking.repository.*;
 import lombok.RequiredArgsConstructor;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -156,7 +157,33 @@ public class ReservationService {
         }
 
         reservation.setStatus(ReservationStatus.PAID);
-        reservationRepository.save(reservation);
+
+        try {
+            //flush right away, so a version conflict is thrown here (and not later, at commit)
+            reservationRepository.saveAndFlush(reservation);
+        } catch (ObjectOptimisticLockingFailureException e) {
+            //the reservation was changed by someone else in the meantime - most likely cancelled by the scheduler
+            throw new IllegalStateException("Czas na płatność minął lub rezerwacja została właśnie zmieniona. Zarezerwuj miejsca ponownie.", e);
+        }
+        return true;
+    }
+
+    //cancels the reservation (and frees its seats) only if it is still waiting for payment
+    //returns true if it was cancelled, false if it was already paid/cancelled (or does not exist)
+    //every call is a separate short transaction, so a conflict affects only this one reservation
+    @Transactional
+    public boolean cancelReservationIfPending(Long reservationId) {
+        Reservation reservation = reservationRepository.findById(reservationId).orElse(null);
+
+        if (reservation == null || reservation.getStatus() != ReservationStatus.PENDING) {
+            return false;
+        }
+
+        reservation.setStatus(ReservationStatus.CANCELLED);
+        // orphanRemoval removes tickets from database - the seats are free again thanks to that
+        reservation.getTickets().clear();
+
+        reservationRepository.saveAndFlush(reservation);
         return true;
     }
 }
