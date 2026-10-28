@@ -52,10 +52,16 @@
 			<artifactId>lombok</artifactId>
 			<optional>true</optional>
 		</dependency>
-		<!-- JUnit5, Mockito i AssertJ do testow jednostkowych -->
+		<!-- JUnit5, Mockito i AssertJ for unit tests -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<!-- tools for testing protections: user(), csrf(), springSecurity() w MockMvc -->
+		<dependency>
+			<groupId>org.springframework.security</groupId>
+			<artifactId>spring-security-test</artifactId>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
@@ -73,7 +79,7 @@
 			<artifactId>spring-boot-starter-webmvc-test</artifactId>
 			<scope>test</scope>
 		</dependency>
-		<!-- biblioteki do generowania kodów QR (ZXing) -->
+		<!-- libraries to generate QR codes (ZXing) -->
 		<dependency>
 			<groupId>com.google.zxing</groupId>
 			<artifactId>core</artifactId>
@@ -84,7 +90,7 @@
 			<artifactId>javase</artifactId>
 			<version>3.5.3</version>
 		</dependency>
-		<!-- biblioteki do tworzenia dokumentów PDF (iText 7) -->
+		<!-- libraries to create pdf documents (iText 7) -->
 		<dependency>
 			<groupId>com.itextpdf</groupId>
 			<artifactId>itext7-core</artifactId>
@@ -96,12 +102,12 @@
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-security</artifactId>
 		</dependency>
-		<!-- wsparcie dla Spring Security w Thymeleaf -->
+		<!-- support for Spring Security in Thymeleaf -->
 		<dependency>
 			<groupId>org.thymeleaf.extras</groupId>
 			<artifactId>thymeleaf-extras-springsecurity6</artifactId>
 		</dependency>
-		<!-- biblioteka walidacji -->
+		<!-- validation library -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-validation</artifactId>
