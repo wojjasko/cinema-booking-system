@@ -10,8 +10,8 @@ jobs:
   build-and-test:
     runs-on: ubuntu-latest
 
-    # Real PostgreSQL for test, which run the whole Spring context (BookingApplicationTests)
-    # Data matches the defaults in application.properties (cinemadb/postgres/1708)
+    # Real PostgreSQL for the tests (profile "test" -> database cinemadb_test
+    # Login and password match the defaults in application.properties (postgres/1708)
     services:
       postgres:
         image: postgres:15-alpine
@@ -22,7 +22,7 @@ jobs:
         ports:
           - 5432:5432
         options: >-
-          --health-cmd "pg_isready -U postgres -d cinemadb"
+          --health-cmd "pg_isready -U postgres -d cinemadb_test"
           --health-interval 5s
           --health-timeout 5s
           --health-retries 10
