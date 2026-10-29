@@ -10,6 +10,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.security.access.AccessDeniedException;
 
 import java.math.BigDecimal;
@@ -219,5 +220,56 @@ class ReservationServiceTest {
 
         assertThat(reservation.getStatus()).isEqualTo(ReservationStatus.PENDING);
         verify(reservationRepository, never()).save(any());
+    }
+
+    @Test
+    void processBlikPayment_reportsExpiredReservation_whenSomeoneChangedItInTheMeantime() {
+        Reservation reservation = reservation(5L, OWNER, ReservationStatus.PENDING);
+        when(reservationRepository.findById(5L)).thenReturn(Optional.of(reservation));
+        //simulation: in the meantime the scheduler cancelled the reservation, so saving with the old version fails
+        when(reservationRepository.saveAndFlush(reservation))
+                .thenThrow(new ObjectOptimisticLockingFailureException(Reservation.class, 5L));
+
+        assertThatThrownBy(() -> reservationService.processBlikPayment(5L, "123456", OWNER))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("Czas na płatność minął");
+    }
+
+    // ---------- cancelling an expired reservation ----------
+
+    @Test
+    void cancelReservationIfPending_cancelsPendingReservationAndFreesItsSeats() {
+        Reservation reservation = reservation(5L, OWNER, ReservationStatus.PENDING);
+        reservation.getTickets().add(Ticket.builder().reservation(reservation).seat(seat(1L, hall)).build());
+        when(reservationRepository.findById(5L)).thenReturn(Optional.of(reservation));
+
+        boolean cancelled = reservationService.cancelReservationIfPending(5L);
+
+        assertThat(cancelled).isTrue();
+        assertThat(reservation.getStatus()).isEqualTo(ReservationStatus.CANCELLED);
+        assertThat(reservation.getTickets()).isEmpty();
+        verify(reservationRepository).saveAndFlush(reservation);
+    }
+
+    @Test
+    void cancelReservationIfPending_doesNotTouchAlreadyPaidReservation() {
+        Reservation reservation = reservation(5L, OWNER, ReservationStatus.PAID);
+        reservation.getTickets().add(Ticket.builder().reservation(reservation).seat(seat(1L, hall)).build());
+        when(reservationRepository.findById(5L)).thenReturn(Optional.of(reservation));
+
+        assertThat(reservationService.cancelReservationIfPending(5L)).isFalse();
+
+        assertThat(reservation.getStatus()).isEqualTo(ReservationStatus.PAID);
+        assertThat(reservation.getTickets()).hasSize(1);
+        verify(reservationRepository, never()).saveAndFlush(any());
+    }
+
+    @Test
+    void cancelReservationIfPending_returnsFalseForMissingReservation() {
+        when(reservationRepository.findById(404L)).thenReturn(Optional.empty());
+
+        assertThat(reservationService.cancelReservationIfPending(404L)).isFalse();
+
+        verify(reservationRepository, never()).saveAndFlush(any());
     }
 }
