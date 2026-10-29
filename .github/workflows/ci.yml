@@ -16,7 +16,7 @@ jobs:
       postgres:
         image: postgres:15-alpine
         env:
-          POSTGRES_DB: cinemadb
+          POSTGRES_DB: cinemadb_test
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: "1708"
         ports:
